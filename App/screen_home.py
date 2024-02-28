@@ -1,5 +1,5 @@
 from pathlib import Path
-from tkinter import Tk, Canvas, Button, Listbox, Scrollbar, PhotoImage
+from tkinter import Tk, Canvas, Button, Listbox, Scrollbar, PhotoImage, filedialog
 from tkinter import ttk
 import tkinter as tk
 from threading import Thread
@@ -288,7 +288,7 @@ class HomeScreen(Tk):
             image=self.button_image_folder,
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: print("button_9 clicked"),
+            command=lambda: self.folder_click(),
             relief="flat"
         )
         self.button_folder.place(
@@ -523,8 +523,11 @@ class HomeScreen(Tk):
     def set_volume(self, volume):
         self.audio_player.set_volume(float(volume))
 
-
-
+    def folder_click(self):
+        global AUDIO_DIR
+        folder_selected = filedialog.askdirectory()
+        AUDIO_DIR = Path(str(folder_selected))
+        self.populate_listbox()
 
 
 if __name__ == "__main__":
