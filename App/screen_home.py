@@ -1,6 +1,7 @@
 from pathlib import Path
 from tkinter import Tk, Canvas, Button, Listbox, Scrollbar, PhotoImage
 from tkinter import ttk
+import tkinter as tk
 from threading import Thread
 from audio_recorder import Recorder
 from audio_player import AudioPlayer
@@ -253,15 +254,23 @@ class HomeScreen(Tk):
         )
 
         # verticle slider, transparent background
-        self.audio_slider = ttk.Scale(
+        self.audio_slider = tk.Scale(
             self,
-            from_=1,
-            to=0,
+            from_=1.0,
+            to=0.0,
+            resolution=0.01,
             orient="vertical",
-            
-            command=lambda value: self.set_volume(value),
+            bd=1,
+            font=("inter", 12),
+            bg="#EFCACE",
+            relief="flat",
+            showvalue=False,
+            troughcolor="#EFCACE",
+            activebackground="#EFCACE",
+            command=self.set_volume,
+            highlightthickness=0
         )
-        self.audio_slider.place(x=340, y=630, width=40, height=80)
+        self.audio_slider.place(x=370, y=640, width=20, height=60)
         self.audio_slider.set(0.5)
 
         self.canvas.create_text(
@@ -512,7 +521,7 @@ class HomeScreen(Tk):
             self.button_play.config(image=self.button_image_play, command=self.play_audio)
 
     def set_volume(self, volume):
-        print(volume)
+        self.audio_player.set_volume(float(volume))
 
 
 

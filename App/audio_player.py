@@ -1,6 +1,7 @@
 import wave
 import pyaudio
 import time
+import numpy as np
 from threading import Thread
 
 class AudioPlayer:
@@ -11,6 +12,7 @@ class AudioPlayer:
         self.stream = None
         self.filename = ""
         self.speed = 1.0
+        self.volume = 0.5
         self.start_time = 0 # from 0 to 1, 0 is the start of the audio, 1 is the end
         self.current_time = 0 # from 0 to 1
         self.start_nframes = 0
@@ -82,6 +84,12 @@ class AudioPlayer:
             if self.stream.is_active() == False or self.stream.is_stopped() == True or self.stream is None:
                 break
             
+            
+            # Set the volume, data *= 0.1
+            data = np.frombuffer(data, dtype=np.int16)
+            data = (self.volume * data).astype(np.int16)
+            data = data.tobytes()
+
             self.stream.write(data) # Write the data to the stream
             data = wf.readframes(1024) # Read the next chunk of data
             self.current_nframes += 1024 # Update the current frame
@@ -166,6 +174,9 @@ class AudioPlayer:
 
         else:
             self.restart_playing(speed, self.current_time)
+
+    def set_volume(self, volume):
+        self.volume = volume
 
             
     def close(self):
