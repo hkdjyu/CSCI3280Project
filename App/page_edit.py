@@ -3,7 +3,9 @@ import librosa
 from matplotlib import pyplot as plt
 from page import Page
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from threading import Thread
 import wave
+import time
 
 class EditPage(Page):
     def __init__(self, audio_player, *args, **kwargs):
@@ -38,35 +40,60 @@ class EditPage(Page):
             relief="flat",
             activebackground="#D4F4CC",
             activeforeground="black",
-            command=lambda: update_visualization(self, audio_player)
-            #print("is audio playing? ", audio_player.is_playing(),update_visualization(self, audio_player))
+            command=lambda: start_visualization(self, audio_player)
         )
         self.button.place(x=200, y=600, width=120, height=20)
+
+        self.fig = plt.figure(figsize=(8, 2))
+        self.ax = self.fig.add_subplot(111)
+        self.ax.axis('off')
+        self.canvas_fig = FigureCanvasTkAgg(self.fig, master=self.canvas)
+        self.canvas_fig.get_tk_widget().place(x=0, y=100)
+
+        def start_visualization(self, audio_player):
+            new_thread = Thread(target=update_visualization, args=(self, audio_player))
+            new_thread.start()
 
         def update_visualization(self, audio_player):
             # Load audio file
             audio_file = "./temp/temp.wav"
             y, sr = librosa.load(audio_file)
-
-            # Create a matplotlib figure for the audio visualization
-            fig = plt.figure(figsize=(8, 2))
-            ax = fig.add_subplot(111)
+            line = None
+            annotation = None  # Variable to store the text annotation
+            # Clear the previous plot
+            self.ax.clear()      
 
             # Plot the waveform
-            librosa.display.waveshow(y, sr=sr, ax=ax, color='r')
+            librosa.display.waveshow(y, sr=sr, ax=self.ax, color='r')
+            
+            while audio_player.is_playing():
+                # Get the current progress of the audio
+                current_time, total_time = audio_player.get_time()  # Adjust this line based on your audio player implementation
+                 # Convert time to minutes and seconds
+                current_time_min = int(current_time // 60)
+                current_time_sec = int(current_time % 60)
+                total_time_min = int(total_time // 60)
+                total_time_sec = int(total_time % 60)
 
-            # Get the current progress of the audio
-            current_time, total_time = audio_player.get_time()  # Adjust this line based on your audio player implementation
 
-            # Plot a line to represent the current progress
-            ax.axvline(x=current_time, color='g')
+                if line:
+                    line.remove()
+                # Plot a line to represent the current progress
+                line = self.ax.axvline(x=current_time, color='g')
 
-            # Remove axes and labels
-            ax.axis('off')
+                if annotation:
+                    annotation.remove()
+                 # Add time text annotation
+                time_text = f"Time: {current_time_min:02d}:{current_time_sec:02d} / {total_time_min:02d}:{total_time_sec:02d}"
+                annotation = self.ax.text(0.5, 0, time_text, transform=self.ax.transAxes, ha='center', va='top')
+                
+                # Remove axes and labels
+                self.ax.axis('off')
 
-            # Create a FigureCanvasTkAgg to embed the figure in the tkinter canvas
-            canvas = FigureCanvasTkAgg(fig, master=self.canvas)
-            canvas.draw()
+                # Update the figure canvas
+                self.canvas_fig.draw_idle()
 
-            # Place the canvas in the tkinter canvas
-            canvas.get_tk_widget().place(x=100, y=100)
+                # Pause for a short duration
+                time.sleep(0.01)
+
+        
