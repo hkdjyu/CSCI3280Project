@@ -68,7 +68,7 @@ class RecordPage(Page):
 
         # Trim slider
         self.canvas.create_text(
-            100,
+            85,
             200,
             text="Trim",
             fill="black",
@@ -125,9 +125,9 @@ class RecordPage(Page):
 
         # insert new audio
         self.canvas.create_text(
-            100,
+            165,
             380,
-            text="Insert",
+            text="Insert/Overwrite",
             fill="black",
             font=("Arial", 24)
         )
@@ -155,11 +155,24 @@ class RecordPage(Page):
         # insert audio button (record)
         self.button_insert = Button(
             self,
-            text="Record",
+            text="Insert",
             command=self.insert_audio
         )
         self.button_insert.place(
             x=50,
+            y=480,
+            width=100,
+            height=30
+        )
+
+        # overwrite audio button
+        self.button_overwrite = Button(
+            self,
+            text="Overwrite",
+            command=self.overwrite_audio
+        )
+        self.button_overwrite.place(
+            x=170,
             y=480,
             width=100,
             height=30
@@ -325,7 +338,7 @@ class RecordPage(Page):
             self.insert_recorder.stop_recording(temp_path="./temp/insert_temp.wav")
             self.insert_recording_thread.join()
             self.insert_recording_thread = None
-            self.button_insert.config(text="Record")
+            self.button_insert.config(text="Insert")
 
             # insert the audio
             self.insert_audio_to_editing_audio()
@@ -381,6 +394,73 @@ class RecordPage(Page):
         self.panel_left.populate_listbox()
 
         messagebox.showinfo("Success", "Audio inserted successfully")
+
+    def overwrite_audio(self):
+        if self.recorder.is_recording():
+            # pop up a message to stop recording
+            messagebox.showinfo("Warning", "Please stop recording first")
+            return
+        
+        if self.insert_recorder.is_recording():
+            # stop the recording
+            self.insert_recorder.stop_recording(temp_path="./temp/insert_temp.wav")
+            self.insert_recording_thread.join()
+            self.insert_recording_thread = None
+            self.button_overwrite.config(text="Overwrite")
+
+            # overwrite the audio
+            self.overwrite_audio_to_editing_audio()
+        else:
+            # start the recording
+            self.insert_recorder.start_recording()
+            self.insert_recording_thread = Thread(target=self.insert_recording_task)
+            self.insert_recording_thread.start()
+            self.button_overwrite.config(text="Stop")
+
+    def overwrite_audio_to_editing_audio(self):
+        # Overwrite the recorded audio to the editing audio
+        print("Overwriting audio to", self.editing_audio_path)
+        self.p = pyaudio.PyAudio()
+
+        frames = []
+
+        print("editing audio path", self.editing_audio_path)
+        with wave.open(str(self.editing_audio_path), 'rb') as swf:
+            # Open the stream
+            self.stream = self.p.open(format=self.p.get_format_from_width(swf.getsampwidth()),
+                                    channels=swf.getnchannels(),
+                                    rate=swf.getframerate(),
+                                    output=True)
+            # read frames from start to insert time
+            swf.setpos(0)
+            frames.append(swf.readframes(int(swf.getframerate() * self.insert_time_for_text)))
+
+        with wave.open("./temp/insert_temp.wav", 'rb') as iwf:
+            # read frames from the inserted audio
+            frames.append(iwf.readframes(iwf.getnframes()))
+
+        length_of_inserted_audio = iwf.getnframes() / iwf.getframerate() # read the length of the inserted audio in seconds
+
+        with wave.open(str(self.editing_audio_path), 'rb') as swf:
+            
+            # skip the frames of the inserted audio
+            swf.setpos(int(swf.getframerate() * (self.insert_time_for_text + length_of_inserted_audio)))
+        
+            frames.append(swf.readframes(swf.getnframes() - int(swf.getframerate() * self.insert_time_for_text - length_of_inserted_audio)))
+
+        # select file to save the new audio
+        filename = filedialog.asksaveasfilename(defaultextension=".wav", filetypes=[("Wave File", "*.wav")])
+        if filename:
+            # write the new audio to the new file
+            with wave.open(filename, 'wb') as wf:
+                wf.setnchannels(2)
+                wf.setsampwidth(2)
+                wf.setframerate(swf.getframerate())
+                wf.writeframes(b''.join(frames))
+        
+        self.panel_left.populate_listbox()
+
+        messagebox.showinfo("Success", "Audio overwritten successfully")
 
         
 
