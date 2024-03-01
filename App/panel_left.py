@@ -104,6 +104,10 @@ class LeftPanel(Page):
         # Populate listbox with audio files
         self.populate_listbox()
 
+        # slider control
+        self.is_holding_slider = False
+        self.slider_value = 0
+
     def on_listbox_select(self, event):
         selected_index = self.listbox.curselection()
         if selected_index:
@@ -167,11 +171,38 @@ class LeftPanel(Page):
             command=self.set_volume,
             highlightthickness=0
         )
-        self.audio_slider.place(x=370, y=640, width=20, height=60)
+        self.audio_slider.place(x=370, y=510, width=20, height=80)
         self.audio_slider.set(0.5)
 
         # Speed buttons
         self.add_speed_buttons()
+
+        # Add a text to display the current time of the audio
+        self.current_time_text = self.canvas.create_text(
+            290.0,
+            570.0,
+            anchor="nw",
+            text="00:00 / 00:00",
+            fill="#FFFFFF",
+            font=("Inter", 12 * -1)
+        )
+        
+        # Add audio slider
+        self.audio_slider = tk.Scale(
+            self,
+            from_=0.0,
+            to=1.0,
+            resolution=0.01,
+            orient="horizontal",
+            bg="#FFFFFF",
+            length=200,
+            highlightthickness=0,
+            showvalue=False,
+        )
+        self.audio_slider.place(x=160.0, y=540.0)
+        self.audio_slider.bind("<ButtonPress>", lambda e: self.set_holding_slider(True))
+        self.audio_slider.bind("<ButtonRelease>", lambda e: self.seek_audio(self.audio_slider.get()))
+
 
     def add_speed_buttons(self):
         self.button_image_speed = PhotoImage(
@@ -183,7 +214,7 @@ class LeftPanel(Page):
             compound="center",
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.audio_player.set_speed(0.5),
+            command=lambda: self.set_speed(0.5),
             relief="flat"
         )
         self.button_speed0.place(
@@ -200,7 +231,7 @@ class LeftPanel(Page):
             compound="center",
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.audio_player.set_speed(1.0),
+            command=lambda: self.set_speed(1.0),
             relief="flat"
         )
         self.button_speed1.place(
@@ -217,7 +248,7 @@ class LeftPanel(Page):
             compound="center",
             borderwidth=0,
             highlightthickness=0,
-            command=lambda: self.audio_player.set_speed(2.0),
+            command=lambda: self.set_speed(2.0),
             relief="flat"
         )
         self.button_speed2.place(
@@ -234,11 +265,34 @@ class LeftPanel(Page):
             self.audio_player_thread.start()
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_pause, command=self.pause_audio)
+
+            # Update the current time of the audio, a new thread is created to update the time
+            self.current_time_thread = Thread(target=self.update_current_time)
+            self.current_time_thread.start()
+
         elif self.audio_player_state == "PAUSED":
             self.audio_player_state = "PLAYING"
             self.audio_player.resume_playing()
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_pause, command=self.pause_audio)
+            self.current_time_thread = Thread(target=self.update_current_time)
+            self.current_time_thread.start()
+            
+
+    def update_current_time(self):
+
+        while self.audio_player.is_playing():
+            current_time, total_time = self.audio_player.get_time() # in seconds
+
+            # Update the slider
+            if not self.is_holding_slider:
+                self.audio_slider.set(current_time / total_time)
+
+            current_time = time.strftime("%M:%S", time.gmtime(current_time))
+            total_time = time.strftime("%M:%S", time.gmtime(total_time))
+            self.canvas.itemconfig(self.current_time_text, text=f"{current_time} / {total_time}")
+
+            time.sleep(0.1) 
 
     def play_audio_task(self):
         while self.audio_player_state == "PLAYING":
@@ -290,3 +344,24 @@ class LeftPanel(Page):
         if len(str(path)) > 20:
             path = str(path)[:20] + " ... " + str(path)[-30:]
         self.canvas.itemconfig(self.file_path_text, text=path)
+
+    def set_speed(self, speed):
+        self.audio_player.set_speed(float(speed))
+        self.current_time_thread = Thread(target=self.update_current_time)
+        time.sleep(1)
+        self.current_time_thread.start()
+
+    def set_holding_slider(self, value):
+        self.is_holding_slider = value
+
+    def seek_audio(self, value):
+        if self.is_holding_slider:
+            self.audio_player.seek(float(value))
+            
+            time.sleep(1)
+            self.current_time_thread = Thread(target=self.update_current_time)
+            self.current_time_thread.start()
+
+
+        self.set_holding_slider(False)
+        

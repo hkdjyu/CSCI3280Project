@@ -8,7 +8,7 @@ import wave
 class EditPage(Page):
     def __init__(self, audio_player, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
-        self.config(width=800, height=720, bg="#D4F4CC")
+        self.config(width=1280, height=720, bg="#D4F4CC")
 
         self.canvas = tk.Canvas(
             self,
