@@ -49,11 +49,20 @@ class EditPage(Page):
             y, sr = librosa.load(audio_file)
 
             # Create a matplotlib figure for the audio visualization
-            fig = plt.figure(figsize=(6, 4))
+            fig = plt.figure(figsize=(8, 2))
             ax = fig.add_subplot(111)
 
             # Plot the waveform
             librosa.display.waveshow(y, sr=sr, ax=ax, color='r')
+
+            # Get the current progress of the audio
+            current_time, total_time = audio_player.get_time()  # Adjust this line based on your audio player implementation
+
+            # Plot a line to represent the current progress
+            ax.axvline(x=current_time, color='g')
+
+            # Remove axes and labels
+            ax.axis('off')
 
             # Create a FigureCanvasTkAgg to embed the figure in the tkinter canvas
             canvas = FigureCanvasTkAgg(fig, master=self.canvas)
