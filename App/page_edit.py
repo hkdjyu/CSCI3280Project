@@ -6,6 +6,13 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from threading import Thread
 import wave
 import time
+import noisereduce as nr
+import pyaudio
+
+sample_format = pyaudio.paInt16
+channels = 2
+fs = 44100
+file = "./audio/output_noise_removal.wav"
 
 class EditPage(Page):
     def __init__(self, audio_player, *args, **kwargs):
@@ -40,7 +47,8 @@ class EditPage(Page):
             relief="flat",
             activebackground="#D4F4CC",
             activeforeground="black",
-            command=lambda: start_visualization(self, audio_player)
+            command= lambda: noise_removal()
+            #command= lambda: start_visualization(self, audio_player)
         )
         self.button.place(x=200, y=600, width=120, height=20)
 
@@ -62,7 +70,7 @@ class EditPage(Page):
             annotation = None  # Variable to store the text annotation
             # Clear the previous plot
             self.ax.clear()      
-
+            
             # Plot the waveform
             librosa.display.waveshow(y, sr=sr, ax=self.ax, color='r')
             
@@ -96,4 +104,30 @@ class EditPage(Page):
                 # Pause for a short duration
                 time.sleep(0.01)
 
-        
+        def noise_removal():
+            global file  # Declare file as a global variable
+            #y, sr = librosa.load("./audio/output.wav")
+            rf = wave.open("./audio/output.wav", 'rb')
+            params = rf.getparams()
+            nchannels, sampwidth, framerate, nframes = params[:4]
+            data = rf.readframes(nframes)
+            
+            reduced_noise = nr.reduce_noise(y=data, sr=framerate)
+            
+            if file == "":
+                file = "./output_noise_removal.wav"
+            if not file.endswith(".wav"):
+                file = file + ".wav"
+
+            if reduced_noise.any():
+                wf = wave.open(file, 'wb')
+                wf.setnchannels(nchannels)
+                wf.setsampwidth(sampwidth)
+                wf.setframerate(framerate)
+                wf.writeframes(reduced_noise.tobytes())
+                wf.close()
+                print("Recording saved to", file)
+            else:
+                print("No recording to save.")     
+
+            

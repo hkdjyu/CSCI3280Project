@@ -77,7 +77,7 @@ class Recorder:
         # else:
         #     print("No recording to save.")
 
-
+    
 
 # chunk = 1024
 # sample_format = pyaudio.paInt16
