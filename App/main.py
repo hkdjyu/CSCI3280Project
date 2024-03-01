@@ -24,7 +24,7 @@ class MainView(tk.Frame):
         self.left_panel = LeftPanel(audio_player, self)
         self.left_panel.grid(row=0, column=0, sticky="s")
 
-        self.main_panel = RecordPage(self)
+        self.main_panel = RecordPage(audio_player, self)
         self.main_panel.grid(row=0, column=1)
 
         self.edit_panel = EditPage(audio_player, self)

@@ -1,4 +1,8 @@
 import wave
+
+# import thread
+from threading import Thread
+
 import pyaudio
 import time
 import numpy as np
@@ -185,6 +189,27 @@ class AudioPlayer:
 
     def get_data(self):
         return self.data
+    
+    def update_current_time(self, p_canvas, p_text):
+        if self.play_state == "PLAYING":
+            p_canvas.itemconfigure(p_text, text=self.get_current_time())
+            p_canvas.after(1000, self.update_current_time, p_canvas, p_text)
+
+    # return (current time, total time) in seconds, calculate from data
+    def get_time(self):
+        wf = wave.open(self.filename, 'rb')
+        total_time = wf.getnframes() / wf.getframerate()
+        current_time = self.current_time * total_time
+        wf.close()
+
+        return (current_time, total_time)
+
+    def get_speed(self):
+        return self.speed
+    
+    def seek(self, time): # time is from 0 to 1
+        if self.play_state == "PLAYING":
+            self.restart_playing(self.speed, time)
     
     def get_sample_rate(self):
         return self.srate

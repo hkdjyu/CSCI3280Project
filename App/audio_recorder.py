@@ -50,7 +50,12 @@ class Recorder:
             data = self.stream.read(chunk)
             self.frames.append(data)
 
-    def save_recording(self):
+    def save_recording(self, filename):
+        if filename == "":
+            filename = "./output.wav"
+        if not filename.endswith(".wav"):
+            filename = filename + ".wav"
+
         if self.frames:
             wf = wave.open(filename, 'wb')
             wf.setnchannels(channels)
@@ -61,6 +66,16 @@ class Recorder:
             print("Recording saved to", filename)
         else:
             print("No recording to save.")
+        # if self.frames:
+        #     wf = wave.open(filename, 'wb')
+        #     wf.setnchannels(channels)
+        #     wf.setsampwidth(self.p.get_sample_size(sample_format))
+        #     wf.setframerate(fs)
+        #     wf.writeframes(b''.join(self.frames))
+        #     wf.close()
+        #     print("Recording saved to", filename)
+        # else:
+        #     print("No recording to save.")
 
 
 
