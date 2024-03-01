@@ -17,9 +17,9 @@ class Navbar(tk.Frame):
         )
         self.canvas.place(x=0, y=0)
 
-        self.home_button = tk.Button(
+        self.record_button = tk.Button(
             self,
-            text="Home",
+            text="Record",
             bg="white",
             fg="black",
             font=("Arial", 12),
@@ -27,7 +27,7 @@ class Navbar(tk.Frame):
             activebackground="#792261",
             activeforeground="white"
         )
-        self.home_button.place(x=0, y=0, width=120, height=20)
+        self.record_button.place(x=0, y=0, width=120, height=20)
 
         self.edit_button = tk.Button(
             self,
@@ -65,6 +65,6 @@ class Navbar(tk.Frame):
         )
         self.add_button.place(x=360, y=0, width=120, height=20)
 
-        self.home_button.bind("<Button-1>", lambda e: switch_page("home"))
+        self.record_button.bind("<Button-1>", lambda e: switch_page("record"))
         self.edit_button.bind("<Button-1>", lambda e: switch_page("edit"))
 

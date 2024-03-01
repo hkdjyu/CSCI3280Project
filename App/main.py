@@ -1,7 +1,7 @@
 # A python voice recorder app using tkinter and pyaudio
 
 import tkinter as tk
-from page_home import HomePage
+from page_record import RecordPage
 from page_edit import EditPage
 from panel_left import LeftPanel
 from navbar import Navbar
@@ -20,7 +20,7 @@ class MainView(tk.Frame):
         self.left_panel = LeftPanel(self)
         self.left_panel.grid(row=0, column=0, sticky="s")
 
-        self.main_panel = HomePage(self)
+        self.main_panel = RecordPage(self)
         self.main_panel.grid(row=0, column=1)
 
         self.edit_panel = EditPage(self)
@@ -28,12 +28,12 @@ class MainView(tk.Frame):
 
         # Create a dictionary to store the pages
         self.pages = {
-            "home": self.main_panel,
+            "record": self.main_panel,
             "edit": self.edit_panel
         }
 
-        # Show the home page
-        self.show_page("home")
+        # Show the record page
+        self.show_page("record")
 
     def show_page(self, page_name):
         page = self.pages[page_name]
@@ -45,7 +45,7 @@ class MainView(tk.Frame):
 
     def switch_page(self, page_name):
         print(f"Switching to {page_name}")
-        self.hide_page("home")
+        self.hide_page("record")
         self.hide_page("edit")
         self.show_page(page_name)
        
