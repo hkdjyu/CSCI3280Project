@@ -1,6 +1,7 @@
 import tkinter as tk
 import librosa
 from matplotlib import pyplot as plt
+import numpy as np
 from page import Page
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from threading import Thread
@@ -8,6 +9,7 @@ import wave
 import time
 import noisereduce as nr
 import pyaudio
+from scipy import signal
 
 sample_format = pyaudio.paInt16
 channels = 2
@@ -111,9 +113,13 @@ class EditPage(Page):
             params = rf.getparams()
             nchannels, sampwidth, framerate, nframes = params[:4]
             data = rf.readframes(nframes)
-            
-            reduced_noise = nr.reduce_noise(y=data, sr=framerate)
-            
+            # Convert byte string to numerical array
+            #data = np.frombuffer(data, dtype=pyaudio.paInt16)
+            #data = data.astype(pyaudio.paInt16)
+
+            reduced_noise = f_high(y=data, sr=framerate)
+            #reduced_noise = nr.reduce_noise(y=data, sr=framerate)
+
             if file == "":
                 file = "./output_noise_removal.wav"
             if not file.endswith(".wav"):
@@ -124,10 +130,13 @@ class EditPage(Page):
                 wf.setnchannels(nchannels)
                 wf.setsampwidth(sampwidth)
                 wf.setframerate(framerate)
-                wf.writeframes(reduced_noise.tobytes())
+                wf.writeframes(b''.join(reduced_noise))
                 wf.close()
                 print("Recording saved to", file)
             else:
                 print("No recording to save.")     
 
-            
+        def f_high(y, sr):
+            b, a = signal.butter(10, 2000 / (sr / 2), btype='highpass', output='sos')
+            yf = signal.lfilter(b, a, y)
+            return yf  
