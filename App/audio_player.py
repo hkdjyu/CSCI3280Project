@@ -18,6 +18,7 @@ class AudioPlayer:
         self.start_nframes = 0
         self.current_nframes = 0
         self.playingThread = None
+        self.data = None
 
     def is_playing(self):
         return self.play_state == "PLAYING"
@@ -71,12 +72,12 @@ class AudioPlayer:
         wf.setpos(self.start_nframes)
 
         # Read data
-        data = wf.readframes(1024)
+        self.data = wf.readframes(1024)
 
         print("Playing...")
 
         # Play the file
-        while data != b'' and (self.play_state == "PLAYING" or self.play_state == "PAUSED"):
+        while self.data != b'' and (self.play_state == "PLAYING" or self.play_state == "PAUSED"):
             if self.play_state == "PAUSED":
                 time.sleep(0.1)
                 continue
@@ -86,12 +87,12 @@ class AudioPlayer:
             
             
             # Set the volume, data *= 0.1
-            data = np.frombuffer(data, dtype=np.int16)
-            data = (self.volume * data).astype(np.int16)
-            data = data.tobytes()
+            self.data = np.frombuffer(self.data, dtype=np.int16)
+            self.data = (self.volume * self.data).astype(np.int16)
+            self.data = self.data.tobytes()
 
-            self.stream.write(data) # Write the data to the stream
-            data = wf.readframes(1024) # Read the next chunk of data
+            self.stream.write(self.data) # Write the data to the stream
+            self.data = wf.readframes(1024) # Read the next chunk of data
             self.current_nframes += 1024 # Update the current frame
             self.current_time = self.current_nframes / wf.getnframes() # Update the current time
             if self.current_nframes >= wf.getnframes():
@@ -178,3 +179,6 @@ class AudioPlayer:
             
     def close(self):
         self.p.terminate()
+
+    def get_data(self):
+        return self.data
