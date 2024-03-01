@@ -6,7 +6,11 @@ from page_edit import EditPage
 from panel_left import LeftPanel
 from navbar import Navbar
 
+from audio_player import AudioPlayer
+
 window_size = "1280x720"
+
+audio_player = AudioPlayer()
 
 class MainView(tk.Frame):
     def __init__(self, *args, **kwargs):
@@ -17,13 +21,13 @@ class MainView(tk.Frame):
         self.navbar = Navbar(self.switch_page, self)
         self.navbar.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        self.left_panel = LeftPanel(self)
+        self.left_panel = LeftPanel(audio_player, self)
         self.left_panel.grid(row=0, column=0, sticky="s")
 
         self.main_panel = RecordPage(self)
         self.main_panel.grid(row=0, column=1)
 
-        self.edit_panel = EditPage(self)
+        self.edit_panel = EditPage(audio_player, self)
         self.edit_panel.grid(row=0, column=1)
 
         # Create a dictionary to store the pages

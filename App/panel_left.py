@@ -13,7 +13,7 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 class LeftPanel(Page):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, audio_player, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
         self.config(width=480, height=600, bg="#893271")
     
@@ -93,8 +93,8 @@ class LeftPanel(Page):
         self.listbox.config(yscrollcommand=scrollbar.set)
         
         # Initialize audio player
-        self.audio_player = AudioPlayer()
-        self.selected_audio_file = None
+        self.audio_player = audio_player
+        self.selected_audio_file_path = None
         self.audio_player_thread = None
         self.audio_player_state = "NOT_PLAYING"
 
@@ -108,7 +108,7 @@ class LeftPanel(Page):
         selected_index = self.listbox.curselection()
         if selected_index:
             selected_item = self.listbox.get(selected_index[0])
-            self.selected_audio_file = AUDIO_DIR / f"{selected_item}.wav"
+            self.selected_audio_file_path = AUDIO_DIR / f"{selected_item}.wav"
 
     def add_audio_buttons(self):
         # Play button
@@ -228,7 +228,7 @@ class LeftPanel(Page):
         )
 
     def play_audio(self):
-        if self.audio_player_state == "NOT_PLAYING" and self.selected_audio_file:
+        if self.audio_player_state == "NOT_PLAYING" and self.selected_audio_file_path:
             self.audio_player_state = "PLAYING"
             self.audio_player_thread = Thread(target=self.play_audio_task)
             self.audio_player_thread.start()
@@ -242,7 +242,7 @@ class LeftPanel(Page):
 
     def play_audio_task(self):
         while self.audio_player_state == "PLAYING":
-            self.audio_player.start_playing(str(self.selected_audio_file))
+            self.audio_player.start_playing(str(self.selected_audio_file_path))
             if self.audio_player_state != "PLAYING" or self.audio_player.is_playing() == False:
                 self.audio_player_state = "NOT_PLAYING"
                 break
