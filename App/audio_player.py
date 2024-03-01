@@ -3,6 +3,9 @@ import pyaudio
 import time
 import numpy as np
 from threading import Thread
+import librosa
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class AudioPlayer:
     
