@@ -21,6 +21,7 @@ class AudioPlayer:
         self.speed = 1.0
         self.volume = 0.5
         self.start_time = 0 # from 0 to 1, 0 is the start of the audio, 1 is the end
+        self.end_time = 1 # from 0 to 1, 0 is the start of the audio, 1 is the end
         self.current_time = 0 # from 0 to 1
         self.start_nframes = 0
         self.current_nframes = 0
@@ -34,12 +35,17 @@ class AudioPlayer:
     def is_paused(self):
         return self.play_state == "PAUSED"
 
-    def start_playing(self, filename):
+    def start_playing(self, filename, start_time=None, end_time=None):
         self.play_state = "PLAYING"
-        self.filename = filename
+        self.filename = str(filename)
+
+        if start_time is not None:
+            self.start_time = start_time
+        if end_time is not None:
+            self.end_time = end_time
 
         # open the sampling audio file
-        swf = wave.open(filename, 'rb')
+        swf = wave.open(str(filename), 'rb')
         self.srate = swf.getframerate()
         signal = swf.readframes(-1)
         self.stream = self.p.open(format=self.p.get_format_from_width(swf.getsampwidth()),
@@ -60,7 +66,15 @@ class AudioPlayer:
         print("Playing started...")
         self.play("./temp/temp.wav")
 
-    def play(self, filename):
+    def play(self, filename, start_time=None, end_time=None):
+
+        if start_time is not None:
+            self.start_time = start_time
+        if end_time is not None:
+            self.end_time = end_time
+        if self.end_time is None:
+            self.end_time = 1
+
 
         self.play_state = "PLAYING"
 
@@ -75,6 +89,7 @@ class AudioPlayer:
         # start time
         self.start_nframes = int(wf.getnframes() * self.start_time)
         self.current_nframes = self.start_nframes
+        self.end_nframes = int(wf.getnframes() * self.end_time)
 
         # set the file pointer to the start time
         wf.setpos(self.start_nframes)
@@ -105,6 +120,9 @@ class AudioPlayer:
             self.current_time = self.current_nframes / wf.getnframes() # Update the current time
             if self.current_nframes >= wf.getnframes():
                 break # reached the end of the file
+
+            if self.current_nframes >= self.end_nframes:
+                break # reached the end time
 
         # Close and terminate the stream
         wf.close()

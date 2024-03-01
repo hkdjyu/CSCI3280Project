@@ -31,7 +31,7 @@ class Recorder:
             self.record_state = "RECORDING"
             print("Recording started...")
 
-    def stop_recording(self):
+    def stop_recording(self, temp_path = "./temp/record_temp.wav"):
         if self.record_state == "RECORDING":
             self.record_state = "NOT_RECORDING"
             print("Recording stopped...")
@@ -43,6 +43,8 @@ class Recorder:
             
             # Terminate the PortAudio interface
             # self.p.terminate()
+
+            self.save_recording(temp_path)
 
 
     def record(self):

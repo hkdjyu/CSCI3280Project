@@ -17,14 +17,17 @@ class MainView(tk.Frame):
         tk.Frame.__init__(self, *args, **kwargs)
         # configure the main frame
         self.config(bg="black")
+
+        # selected audio path
+        self.selected_audio_path = None
         
         self.navbar = Navbar(self.switch_page, self)
         self.navbar.grid(row=0, column=0, columnspan=2, sticky="nsew")
 
-        self.left_panel = LeftPanel(audio_player, self)
+        self.left_panel = LeftPanel(audio_player, self.set_selected_audio_path, self)
         self.left_panel.grid(row=0, column=0, sticky="s")
 
-        self.main_panel = RecordPage(audio_player, self)
+        self.main_panel = RecordPage(audio_player, self.left_panel, self)
         self.main_panel.grid(row=0, column=1)
 
         self.edit_panel = EditPage(audio_player, self)
@@ -38,6 +41,16 @@ class MainView(tk.Frame):
 
         # Show the record page
         self.show_page("record")
+
+       
+
+    def set_selected_audio_path(self, path):
+        self.selected_audio_path = path
+        self.main_panel.on_selected_audio_path_changes(path)
+
+    def get_selected_audio_path(self):
+        return self.selected_audio_path
+
 
     def show_page(self, page_name):
         page = self.pages[page_name]

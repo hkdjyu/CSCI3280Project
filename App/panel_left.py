@@ -13,7 +13,7 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 class LeftPanel(Page):
-    def __init__(self, audio_player, *args, **kwargs):
+    def __init__(self, audio_player, set_selected_audio_path, *args, **kwargs):
         Page.__init__(self, *args, **kwargs)
         self.config(width=480, height=600, bg="#893271")
     
@@ -94,6 +94,7 @@ class LeftPanel(Page):
         
         # Initialize audio player
         self.audio_player = audio_player
+        self.current_audio_path = None
         self.selected_audio_file_path = None
         self.audio_player_thread = None
         self.audio_player_state = "NOT_PLAYING"
@@ -108,11 +109,17 @@ class LeftPanel(Page):
         self.is_holding_slider = False
         self.slider_value = 0
 
+        # Set the selected audio path
+        self.set_selected_audio_path = set_selected_audio_path
+       
+
+
     def on_listbox_select(self, event):
         selected_index = self.listbox.curselection()
         if selected_index:
             selected_item = self.listbox.get(selected_index[0])
             self.selected_audio_file_path = AUDIO_DIR / f"{selected_item}.wav"
+            self.set_selected_audio_path(self.selected_audio_file_path)
 
     def add_audio_buttons(self):
         # Play button
@@ -179,10 +186,10 @@ class LeftPanel(Page):
 
         # Add a text to display the current time of the audio
         self.current_time_text = self.canvas.create_text(
-            290.0,
+            260.0,
             570.0,
             anchor="nw",
-            text="00:00 / 00:00",
+            text="00:00:00 / 00:00:00",
             fill="#FFFFFF",
             font=("Inter", 12 * -1)
         )
@@ -258,10 +265,11 @@ class LeftPanel(Page):
             height=20.0
         )
 
-    def play_audio(self):
-        if self.audio_player_state == "NOT_PLAYING" and self.selected_audio_file_path:
+    def play_audio(self, path=None, start_time=None, end_time=None):
+        path = str(self.selected_audio_file_path) if path is None else path
+        if self.audio_player_state == "NOT_PLAYING" and path:
             self.audio_player_state = "PLAYING"
-            self.audio_player_thread = Thread(target=self.play_audio_task)
+            self.audio_player_thread = Thread(target=self.play_audio_task, args=(path, start_time, end_time))
             self.audio_player_thread.start()
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_pause, command=self.pause_audio)
@@ -270,7 +278,7 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
 
-        elif self.audio_player_state == "PAUSED":
+        elif self.audio_player_state == "PAUSED" and path == self.current_audio_path:
             self.audio_player_state = "PLAYING"
             self.audio_player.resume_playing()
             time.sleep(0.12)
@@ -278,25 +286,52 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
             
+        elif self.audio_player_state == "PAUSED" and path != self.current_audio_path:
+
+            # stop the current audio
+            self.stop_audio()
+
+            self.audio_player_state = "PLAYING"
+            self.audio_player_thread = Thread(target=self.play_audio_task, args=(path, start_time, end_time))
+            self.audio_player_thread.start()
+            time.sleep(0.12)
+            self.button_play.config(image=self.button_image_pause, command=self.pause_audio)
+            self.current_time_thread = Thread(target=self.update_current_time)
+            self.current_time_thread.start()
 
     def update_current_time(self):
-
+        print("Updating current time")
         while self.audio_player.is_playing():
-            current_time, total_time = self.audio_player.get_time() # in seconds
+            current_time, total_time = self.audio_player.get_time()  # in seconds
 
-            # Update the slider
-            if not self.is_holding_slider:
-                self.audio_slider.set(current_time / total_time)
+            # Convert total time to MM:SS format
+            total_minutes = total_time // 60
+            total_seconds = total_time % 60
+            total_milliseconds = int((total_time - int(total_time)) * 1000)
+            total_milliseconds_str = f"{total_milliseconds:02d}"[:2]  # Ensure milliseconds have two digits
+            total_time_str = f"{int(total_minutes):02d}:{int(total_seconds):02d}:{total_milliseconds_str}"
 
-            current_time = time.strftime("%M:%S", time.gmtime(current_time))
-            total_time = time.strftime("%M:%S", time.gmtime(total_time))
-            self.canvas.itemconfig(self.current_time_text, text=f"{current_time} / {total_time}")
+            # Convert current time to MM:SS:MS format
+            minutes = current_time // 60
+            seconds = current_time % 60
+            milliseconds = int((current_time - int(current_time)) * 1000)
+            milliseconds_str = f"{milliseconds:02d}"[:2]  # Ensure milliseconds have two digits
+            current_time_str = f"{int(minutes):02d}:{int(seconds):02d}:{milliseconds_str}"
 
-            time.sleep(0.1) 
+            self.canvas.itemconfig(self.current_time_text, text=f"{current_time_str} / {total_time_str}")
+            time.sleep(0.1)
 
-    def play_audio_task(self):
+
+
+    def play_audio_task(self, path=None, start_time=None, end_time=None):
+        path = str(self.selected_audio_file_path) if path is None else path
+        print("panel left:",path)
         while self.audio_player_state == "PLAYING":
-            self.audio_player.start_playing(str(self.selected_audio_file_path))
+            # self.audio_player.start_playing(str(path))
+            if start_time is not None and end_time is not None:
+                self.audio_player.start_playing(str(path), start_time, end_time)
+            else:
+                self.audio_player.start_playing(str(path))
             if self.audio_player_state != "PLAYING" or self.audio_player.is_playing() == False:
                 self.audio_player_state = "NOT_PLAYING"
                 break
@@ -308,6 +343,9 @@ class LeftPanel(Page):
 
         time.sleep(0.12)
         self.button_play.config(image=self.button_image_play, command=self.play_audio)
+
+        self.canvas.itemconfig(self.current_time_text, text="00:00:00 / 00:00:00")
+        self.audio_slider.set(0)
 
     def pause_audio(self):
         if self.audio_player.is_playing() and self.audio_player_state == "NOT_PLAYING":
@@ -362,6 +400,10 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
 
-
         self.set_holding_slider(False)
+
+    def get_selected_audio_file_path(self):
+        return self.selected_audio_file_path
+
+    
         
