@@ -3,6 +3,7 @@ import librosa
 from matplotlib import pyplot as plt
 from page import Page
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import wave
 
 class EditPage(Page):
     def __init__(self, audio_player, *args, **kwargs):
@@ -27,7 +28,6 @@ class EditPage(Page):
             fill="black",
             font=("Arial", 24)
         )
-        # Add a button
 
         self.button = tk.Button(
             self,
@@ -38,30 +38,26 @@ class EditPage(Page):
             relief="flat",
             activebackground="#D4F4CC",
             activeforeground="black",
-            command=lambda: print("is audio playing? ", audio_player.is_playing())
+            command=lambda: update_visualization(self, audio_player)
+            #print("is audio playing? ", audio_player.is_playing(),update_visualization(self, audio_player))
         )
-        self.button.place(x=200, y=200, width=120, height=20)
+        self.button.place(x=200, y=600, width=120, height=20)
 
-        #
-        self.audio_visualization = tk.LabelFrame(
-            bg= "#FFFFFF",
-            bd=0,
-        )
-        self.audio_visualization.place(
-            x=480.0,
-            y=100.0,
-            width=800.0,
-            height=520.0
-        )
+        def update_visualization(self, audio_player):
+            # Load audio file
+            audio_file = "./temp/temp.wav"
+            y, sr = librosa.load(audio_file)
 
-        def visualize_audio(y, sr):
-            fig, ax = plt.subplots(1)
-            librosa.display.waveshow(y, sr=sr, ax=ax)
-            ax.axis('off')  # Optionally, turn off the axis
-            return fig
+            # Create a matplotlib figure for the audio visualization
+            fig = plt.figure(figsize=(6, 4))
+            ax = fig.add_subplot(111)
 
-        def update_visualization(self):
-            figure = visualize_audio(y, sr)  # Call the visualization function with your audio data (y and sr)
-            canvas = FigureCanvasTkAgg(figure, master=self.audio_visualization)
+            # Plot the waveform
+            librosa.display.waveshow(y, sr=sr, ax=ax, color='r')
+
+            # Create a FigureCanvasTkAgg to embed the figure in the tkinter canvas
+            canvas = FigureCanvasTkAgg(fig, master=self.canvas)
             canvas.draw()
-            canvas.get_tk_widget().pack(side="top", fill="both", expand=True)
+
+            # Place the canvas in the tkinter canvas
+            canvas.get_tk_widget().place(x=100, y=100)

@@ -22,6 +22,7 @@ class AudioPlayer:
         self.current_nframes = 0
         self.playingThread = None
         self.data = None
+        self.srate = None
 
     def is_playing(self):
         return self.play_state == "PLAYING"
@@ -35,7 +36,7 @@ class AudioPlayer:
 
         # open the sampling audio file
         swf = wave.open(filename, 'rb')
-        srate = swf.getframerate()
+        self.srate = swf.getframerate()
         signal = swf.readframes(-1)
         self.stream = self.p.open(format=self.p.get_format_from_width(swf.getsampwidth()),
                                     channels=swf.getnchannels(),
@@ -47,7 +48,7 @@ class AudioPlayer:
         wf = wave.open("./temp/temp.wav", 'wb')
         wf.setnchannels(2)
         wf.setsampwidth(2)
-        wf.setframerate(srate * self.speed)
+        wf.setframerate(self.srate * self.speed)
         wf.writeframes(signal)
         wf.close()
 
@@ -131,8 +132,7 @@ class AudioPlayer:
         self.start_time = 0
         self.current_nframes = 0
         self.start_nframes = 0            
-        
-        
+                
 
     def pause_playing(self):
         if self.play_state == "PLAYING":
@@ -185,3 +185,14 @@ class AudioPlayer:
 
     def get_data(self):
         return self.data
+    
+    def get_sample_rate(self):
+        return self.srate
+    
+    def get_time(self):
+        wf = wave.open(self.filename, 'rb')
+        total_time = wf.getnframes() / wf.getframerate()
+        current_time = self.current_time * total_time
+        wf.close()
+
+        return (current_time, total_time)
