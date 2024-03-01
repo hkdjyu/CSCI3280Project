@@ -108,28 +108,25 @@ class AudioPlayer:
         print("Playing finished...")
 
     def stop_playing(self):
-        if self.play_state == "PLAYING":
-            self.play_state = "NOT_PLAYING"
-            print("Playing stopped...")
+        if self.play_state == "NOT_PLAYING":
+            return
+        self.play_state = "NOT_PLAYING"
+        print("Playing stopped...")
 
-            # close and terminate the stream
-            if self.stream is not None:
-                self.stream.stop_stream()
+        # close and terminate the stream
+        if self.stream is not None:
+            self.stream.stop_stream()
 
-            # join thread if it is still running
-            if self.playingThread is not None:
-                self.playingThread.join()
-                self.playingThread = None
-            
-            # reset the current time
-            self.current_time = 0
-            self.start_time = 0
-            self.current_nframes = 0
-            self.start_nframes = 0
-
-
-        elif self.play_state == "PAUSED":
-            raise Exception("Cannot stop a paused playback")
+        # join thread if it is still running
+        if self.playingThread is not None:
+            self.playingThread.join()
+            self.playingThread = None
+        
+        # reset the current time
+        self.current_time = 0
+        self.start_time = 0
+        self.current_nframes = 0
+        self.start_nframes = 0            
         
         
 
