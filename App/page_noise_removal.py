@@ -196,7 +196,7 @@ class NoiseRemoval(Page):
                 # Update the figure canvas
                 self.canvas_fig.draw_idle()
 
-                if not(audio_player.is_playing()) or not (audio_player.is_paused()):
+                if not(audio_player.is_playing()) and not (audio_player.is_paused()):
                     break
                 # Pause for a short duration
                 time.sleep(0.01)
