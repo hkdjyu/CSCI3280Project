@@ -3,6 +3,10 @@ from threading import Thread
 import tkinter as tk
 from tkinter import PhotoImage, Button, filedialog, messagebox
 from pathlib import Path
+
+import librosa
+from matplotlib import pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from page import Page
 from audio_noise_remover import AudioNoiseRemover
 
@@ -20,7 +24,7 @@ class NoiseRemoval(Page):
         # Initialize the page with a specified size and background color
         Page.__init__(self, *args, **kwargs)
         self.config(width=1280, height=720, bg="#B5E0E3")
-
+        self.audio_player = audio_player
         # Create a canvas to contain UI elements
         self.canvas = tk.Canvas(
             self,
@@ -78,6 +82,12 @@ class NoiseRemoval(Page):
 
         self.noise_remover_level = 1
         
+        self.fig = plt.figure(figsize=(8, 2))
+        self.ax = self.fig.add_subplot(111)
+        self.ax.axis('off')
+        self.canvas_fig = FigureCanvasTkAgg(self.fig, master=self.canvas)
+        self.canvas_fig.get_tk_widget().place(x=0, y=500)
+        self.ax.set_facecolor('gray')
         
     def on_selected_audio_path_changes(self, path):
         # if path is too long, display the first 10 and last 30 characters
@@ -85,14 +95,15 @@ class NoiseRemoval(Page):
             path = str(path)[:30] + " ... " + str(path)[-40:]
         self.canvas.itemconfig(self.selected_audio_path_text, text=path)
         self.selected_audio_path = path
+        if self.audio_player.is_playing():
+            self.start_visualization()
 
     def on_remove_noise_clicked(self):
         if self.selected_audio_path is None:
             messagebox.showerror("Error", "No audio selected")
             return
 
-        self.remove_noise_button.config(state="disabled")
-
+        self.remove_noise_button.config(state="disabled")     
         # Create a new thread to remove noise
         new_thread = Thread(target=self.remove_noise_thread)
         new_thread.start()
@@ -113,6 +124,54 @@ class NoiseRemoval(Page):
     def on_noise_level_changed(self, level):
         self.noise_remover_level = float(level)
 
+    def start_visualization(self):
+        new_thread = Thread(target=self.update_visualization)
+        new_thread.start()
+
+    def update_visualization(self):
+        # Load audio file
+        audio_player = self.audio_player
+        audio_file = "./temp/temp.wav"
+        y, sr = librosa.load(audio_file)
+        line = None
+        annotation = None  # Variable to store the text annotation
+        # Clear the previous plot
+        self.ax.clear()      
+        self.ax.set_facecolor('gray')
+        # Plot the waveform
+        librosa.display.waveshow(y, sr=sr, ax=self.ax, color='blue')
+        
+        while True:
+            if audio_player.is_playing() or audio_player.is_paused():
+                # Get the current progress of the audio
+                current_time, total_time = audio_player.get_time()  # Adjust this line based on your audio player implementation
+                    # Convert time to minutes and seconds
+                current_time_min = int(current_time // 60)
+                current_time_sec = int(current_time % 60)
+                total_time_min = int(total_time // 60)
+                total_time_sec = int(total_time % 60)
+
+                if line:
+                    line.remove()
+                # Plot a line to represent the current progress
+                line = self.ax.axvline(x=current_time, color='r')
+
+                if annotation:
+                    annotation.remove()
+                # Add time text annotation
+                time_text = f"Time: {current_time_min:02d}:{current_time_sec:02d} / {total_time_min:02d}:{total_time_sec:02d}"
+                annotation = self.ax.text(0.5, 0, time_text, transform=self.ax.transAxes, ha='center', va='top')
+                
+                # Remove axes and labels
+                self.ax.axis('off')
+
+                # Update the figure canvas
+                self.canvas_fig.draw_idle()
+
+                if not(audio_player.is_playing()) or not (audio_player.is_paused()):
+                    break
+                # Pause for a short duration
+                time.sleep(0.01)
         
 
 
