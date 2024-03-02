@@ -24,30 +24,28 @@ class NoiseRemoval(Page):
     @staticmethod
     def on_play_started():
         print("Noise removal page: play started (static)")
-        print(len(NoiseRemoval.instatiated_objects))
         for obj in NoiseRemoval.instatiated_objects:
-            obj.on_play_started()
+            obj.on_play_started_obj()
     
     @staticmethod
     def on_play_stopped():
         print("Noise removal page: play stopped (static)")
         for obj in NoiseRemoval.instatiated_objects:
-            obj.on_play_stopped()
+            obj.on_play_stopped_obj()
 
     @staticmethod
     def on_play_paused():
         print("Noise removal page: play paused (static)")
         for obj in NoiseRemoval.instatiated_objects:
-            obj.on_play_paused()
+            obj.on_play_paused_obj()
 
+    # static variable to store all the instatiated objects
     instatiated_objects = []
 
 
     def __init__(self, audio_player, left_panel, audio_input, *args, **kwargs):
         # Initialize the page with a specified size and background color
         Page.__init__(self, *args, **kwargs)
-
-        NoiseRemoval.instatiated_objects.append(self)
 
         self.config(width=1280, height=720, bg="#B5E0E3")
         self.audio_player = audio_player
@@ -114,6 +112,10 @@ class NoiseRemoval(Page):
         self.canvas_fig = FigureCanvasTkAgg(self.fig, master=self.canvas)
         self.canvas_fig.get_tk_widget().place(x=0, y=500)
         self.ax.set_facecolor('gray')
+
+        NoiseRemoval.instatiated_objects.append(self)
+
+        print(len(NoiseRemoval.instatiated_objects))
         
     def on_selected_audio_path_changes(self, path):
         # if path is too long, display the first 10 and last 30 characters
@@ -199,14 +201,14 @@ class NoiseRemoval(Page):
                 # Pause for a short duration
                 time.sleep(0.01)
 
-    def on_play_started(self):
-        print("Noise removal page: play started(instance)")
+    def on_play_started_obj(self):
+        # print("Noise removal page: play started(instance)")
+        self.start_visualization()
 
-    def on_play_stopped(self):
+    def on_play_stopped_obj(self):
         print("Noise removal page: play stopped(instance)")
 
-    def on_play_paused(self):
+    def on_play_paused_obj(self):
         print("Noise removal page: play paused(instance)")
-        
-
+    
 
