@@ -25,7 +25,9 @@ class Recorder:
         if self.record_state == "NOT_RECORDING":
             
             # get microphone input info
+            global channels
             channels = self.p.get_default_input_device_info()['maxInputChannels']
+            global fs
             fs = int(self.p.get_default_input_device_info()['defaultSampleRate'])
             
             self.stream = self.p.open(input_device_index=self.audio_input,
