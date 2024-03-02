@@ -121,8 +121,8 @@ class NoiseRemoval(Page):
             path = str(path)[:30] + " ... " + str(path)[-40:]
         self.canvas.itemconfig(self.selected_audio_path_text, text=path)
         self.selected_audio_path = path
-        if self.audio_player.is_playing():
-            self.start_visualization()
+        #if self.audio_player.is_playing():
+        #    self.start_visualization()
 
     def on_remove_noise_clicked(self):
         if self.selected_audio_path is None:
