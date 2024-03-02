@@ -3,6 +3,8 @@
 import tkinter as tk
 from page_record import RecordPage
 from page_edit import EditPage
+from page_audio_to_text import AudioToText
+from page_noise_removal import NoiseRemoval
 from panel_left import LeftPanel
 from navbar import Navbar
 
@@ -42,10 +44,20 @@ class MainView(tk.Frame):
         self.edit_panel = EditPage(audio_player, self)
         self.edit_panel.grid(row=0, column=1)
 
+        self.audio_to_text_panel = AudioToText(audio_player, self.left_panel, audio_input, self)
+        self.audio_to_text_panel.grid(row=0, column=1)
+
+        self.noise_removal_panel = NoiseRemoval(audio_player, self.left_panel, audio_input, self)
+        self.noise_removal_panel.grid(row=0, column=1)
+
+
+
         # Create a dictionary to store the pages
         self.pages = {
             "record": self.main_panel,
-            "edit": self.edit_panel
+            "edit": self.edit_panel,
+            "audio_to_text": self.audio_to_text_panel,
+            "noise_removal": self.noise_removal_panel
         }
 
         # Show the record page
@@ -56,6 +68,8 @@ class MainView(tk.Frame):
     def set_selected_audio_path(self, path):
         self.selected_audio_path = path
         self.main_panel.on_selected_audio_path_changes(path)
+        self.audio_to_text_panel.on_selected_audio_path_changes(path)
+        self.noise_removal_panel.on_selected_audio_path_changes(path)
 
     def get_selected_audio_path(self):
         return self.selected_audio_path
@@ -71,8 +85,8 @@ class MainView(tk.Frame):
 
     def switch_page(self, page_name):
         print(f"Switching to {page_name}")
-        self.hide_page("record")
-        self.hide_page("edit")
+        for page in self.pages:
+            self.hide_page(page)
         self.show_page(page_name) 
 
 if __name__ == "__main__":

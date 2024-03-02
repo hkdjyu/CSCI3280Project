@@ -41,9 +41,9 @@ class Navbar(tk.Frame):
         )
         self.edit_button.place(x=120, y=0, width=120, height=20)
 
-        self.delete_button = tk.Button(
+        self.audioToText_button = tk.Button(
             self,
-            text="",
+            text="Audio to Text",
             bg="lightgrey",
             fg="black",
             font=("Arial", 12),
@@ -51,11 +51,11 @@ class Navbar(tk.Frame):
             activebackground="#792261",
             activeforeground="white"
         )
-        self.delete_button.place(x=240, y=0, width=120, height=20)
+        self.audioToText_button.place(x=240, y=0, width=120, height=20)
 
-        self.add_button = tk.Button(
+        self.noiseRemoval_button = tk.Button(
             self,
-            text="",
+            text="Noise Removal",
             bg="lightgrey",
             fg="black",
             font=("Arial", 12),
@@ -63,8 +63,10 @@ class Navbar(tk.Frame):
             activebackground="#792261",
             activeforeground="white"
         )
-        self.add_button.place(x=360, y=0, width=120, height=20)
+        self.noiseRemoval_button.place(x=360, y=0, width=120, height=20)
 
         self.record_button.bind("<Button-1>", lambda e: switch_page("record"))
         self.edit_button.bind("<Button-1>", lambda e: switch_page("edit"))
+        self.audioToText_button.bind("<Button-1>", lambda e: switch_page("audio_to_text"))
+        self.noiseRemoval_button.bind("<Button-1>", lambda e: switch_page("noise_removal"))
 
