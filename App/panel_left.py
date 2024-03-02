@@ -278,7 +278,7 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
 
-            NoiseRemoval.on_play_started()
+            NoiseRemoval.on_play_started(None)
 
         elif self.audio_player_state == "PAUSED" and path == self.current_audio_path:
             self.audio_player_state = "PLAYING"
@@ -288,7 +288,7 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
 
-            NoiseRemoval.on_play_started()
+            NoiseRemoval.on_play_started(None)
             
         elif self.audio_player_state == "PAUSED" and path != self.current_audio_path:
 
@@ -303,7 +303,7 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
 
-            NoiseRemoval.on_play_started()
+            NoiseRemoval.on_play_started(None)
 
     def update_current_time(self):
         print("Updating current time")
@@ -356,7 +356,7 @@ class LeftPanel(Page):
         self.canvas.itemconfig(self.current_time_text, text="00:00:00 / 00:00:00")
         self.audio_slider.set(0)
 
-        NoiseRemoval.on_play_stopped()
+        NoiseRemoval.on_play_stopped(None)
 
     def pause_audio(self):
         if self.audio_player.is_playing() and self.audio_player_state == "NOT_PLAYING":
@@ -365,7 +365,7 @@ class LeftPanel(Page):
 
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_play, command=self.play_audio)
-            NoiseRemoval.on_play_paused()
+            NoiseRemoval.on_play_paused(None)
 
         if self.audio_player_state == "PLAYING":
             self.audio_player_state = "PAUSED"
@@ -373,7 +373,7 @@ class LeftPanel(Page):
 
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_play, command=self.play_audio)
-            NoiseRemoval.on_play_paused()
+            NoiseRemoval.on_play_paused(None)
 
     def set_volume(self, volume):
         self.audio_player.set_volume(float(volume))

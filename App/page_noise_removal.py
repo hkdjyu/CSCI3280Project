@@ -23,16 +23,20 @@ class NoiseRemoval(Page):
 
     @staticmethod
     def on_play_started():
+        print("Noise removal page: play started (static)")
+        print(len(NoiseRemoval.instatiated_objects))
         for obj in NoiseRemoval.instatiated_objects:
             obj.on_play_started()
     
     @staticmethod
     def on_play_stopped():
+        print("Noise removal page: play stopped (static)")
         for obj in NoiseRemoval.instatiated_objects:
             obj.on_play_stopped()
 
     @staticmethod
     def on_play_paused():
+        print("Noise removal page: play paused (static)")
         for obj in NoiseRemoval.instatiated_objects:
             obj.on_play_paused()
 
@@ -196,13 +200,13 @@ class NoiseRemoval(Page):
                 time.sleep(0.01)
 
     def on_play_started(self):
-        pass
+        print("Noise removal page: play started(instance)")
 
     def on_play_stopped(self):
-        pass
+        print("Noise removal page: play stopped(instance)")
 
     def on_play_paused(self):
-        pass
+        print("Noise removal page: play paused(instance)")
         
 
 
