@@ -4,6 +4,7 @@ import tkinter as tk
 from tkinter import Listbox, Scrollbar, Button, PhotoImage, filedialog, Canvas
 from pathlib import Path
 from page import Page
+from page_noise_removal import NoiseRemoval
 
 ASSETS_PATH = Path("./assets/frame0")
 AUDIO_DIR = Path("./audio")
@@ -277,6 +278,8 @@ class LeftPanel(Page):
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
 
+            NoiseRemoval.on_play_started()
+
         elif self.audio_player_state == "PAUSED" and path == self.current_audio_path:
             self.audio_player_state = "PLAYING"
             self.audio_player.resume_playing()
@@ -284,6 +287,8 @@ class LeftPanel(Page):
             self.button_play.config(image=self.button_image_pause, command=self.pause_audio)
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
+
+            NoiseRemoval.on_play_started()
             
         elif self.audio_player_state == "PAUSED" and path != self.current_audio_path:
 
@@ -297,6 +302,8 @@ class LeftPanel(Page):
             self.button_play.config(image=self.button_image_pause, command=self.pause_audio)
             self.current_time_thread = Thread(target=self.update_current_time)
             self.current_time_thread.start()
+
+            NoiseRemoval.on_play_started()
 
     def update_current_time(self):
         print("Updating current time")
@@ -349,6 +356,8 @@ class LeftPanel(Page):
         self.canvas.itemconfig(self.current_time_text, text="00:00:00 / 00:00:00")
         self.audio_slider.set(0)
 
+        NoiseRemoval.on_play_stopped()
+
     def pause_audio(self):
         if self.audio_player.is_playing() and self.audio_player_state == "NOT_PLAYING":
             self.audio_player_state = "PAUSED"
@@ -356,6 +365,7 @@ class LeftPanel(Page):
 
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_play, command=self.play_audio)
+            NoiseRemoval.on_play_paused()
 
         if self.audio_player_state == "PLAYING":
             self.audio_player_state = "PAUSED"
@@ -363,6 +373,7 @@ class LeftPanel(Page):
 
             time.sleep(0.12)
             self.button_play.config(image=self.button_image_play, command=self.play_audio)
+            NoiseRemoval.on_play_paused()
 
     def set_volume(self, volume):
         self.audio_player.set_volume(float(volume))

@@ -20,6 +20,16 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 class NoiseRemoval(Page):
+
+    @staticmethod
+    def on_play_started():
+        print("Playing started..., called from NoiseRemoval")
+    
+    def on_play_stopped(self):
+        print("Playing stopped..., called from NoiseRemoval")
+
+
+
     def __init__(self, audio_player, left_panel, audio_input, *args, **kwargs):
         # Initialize the page with a specified size and background color
         Page.__init__(self, *args, **kwargs)
