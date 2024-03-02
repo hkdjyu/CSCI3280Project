@@ -22,6 +22,10 @@ class Recorder:
 
     def start_recording(self):
         if self.record_state == "NOT_RECORDING":
+            
+            # get microphone input channel
+            channels = self.p.get_default_input_device_info()['maxInputChannels']
+            fs = int(self.p.get_default_input_device_info()['defaultSampleRate'])            
             self.stream = self.p.open(format=sample_format,
                                       channels=channels,
                                       rate=fs,
@@ -79,7 +83,7 @@ class Recorder:
         # else:
         #     print("No recording to save.")
 
-    
+
 
 # chunk = 1024
 # sample_format = pyaudio.paInt16
