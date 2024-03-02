@@ -23,16 +23,28 @@ class NoiseRemoval(Page):
 
     @staticmethod
     def on_play_started():
-        print("Playing started..., called from NoiseRemoval")
+        for obj in NoiseRemoval.instatiated_objects:
+            obj.on_play_started()
     
-    def on_play_stopped(self):
-        print("Playing stopped..., called from NoiseRemoval")
+    @staticmethod
+    def on_play_stopped():
+        for obj in NoiseRemoval.instatiated_objects:
+            obj.on_play_stopped()
 
+    @staticmethod
+    def on_play_paused():
+        for obj in NoiseRemoval.instatiated_objects:
+            obj.on_play_paused()
+
+    instatiated_objects = []
 
 
     def __init__(self, audio_player, left_panel, audio_input, *args, **kwargs):
         # Initialize the page with a specified size and background color
         Page.__init__(self, *args, **kwargs)
+
+        NoiseRemoval.instatiated_objects.append(self)
+
         self.config(width=1280, height=720, bg="#B5E0E3")
         self.audio_player = audio_player
         # Create a canvas to contain UI elements
@@ -182,6 +194,15 @@ class NoiseRemoval(Page):
                     break
                 # Pause for a short duration
                 time.sleep(0.01)
+
+    def on_play_started(self):
+        pass
+
+    def on_play_stopped(self):
+        pass
+
+    def on_play_paused(self):
+        pass
         
 
 
