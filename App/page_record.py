@@ -17,7 +17,7 @@ def relative_to_assets(path: str) -> Path:
     return ASSETS_PATH / Path(path)
 
 class RecordPage(Page):
-    def __init__(self, audio_player, left_panel, *args, **kwargs):
+    def __init__(self, audio_player, left_panel, audio_input, *args, **kwargs):
         # Initialize the page with a specified size and background color
         Page.__init__(self, *args, **kwargs)
         self.config(width=1280, height=720, bg="#F4D6CC")
@@ -183,9 +183,10 @@ class RecordPage(Page):
             
 
         # Initialize the audio recorder and player
-        self.recorder = Recorder()
+        self.recorder = Recorder(audio_input)
         self.audio_player = audio_player
         self.panel_left = left_panel
+        self.audio_input = audio_input
 
         # variables to store the start and end time of the trim
         self.start_time = 0
@@ -195,7 +196,7 @@ class RecordPage(Page):
         self.editing_audio_path = None
 
         # insert recoder
-        self.insert_recorder = Recorder()
+        self.insert_recorder = Recorder(audio_input)
         self.insert_time = 0
 
 
@@ -299,7 +300,8 @@ class RecordPage(Page):
 
             # open the stream
             self.p = pyaudio.PyAudio()
-            self.stream = self.p.open(format=self.p.get_format_from_width(swf.getsampwidth()),
+            self.stream = self.p.open(input_device_index=self.audio_input,
+                                    format=self.p.get_format_from_width(swf.getsampwidth()),
                                     channels=swf.getnchannels(),
                                     rate=swf.getframerate(),
                                     output=True)
@@ -364,7 +366,8 @@ class RecordPage(Page):
         print("editing audio path", self.editing_audio_path)
         with wave.open(str(self.editing_audio_path), 'rb') as swf:
             # Open the stream
-            self.stream = self.p.open(format=self.p.get_format_from_width(swf.getsampwidth()),
+            self.stream = self.p.open(input_device_index=self.audio_input,
+                                    format=self.p.get_format_from_width(swf.getsampwidth()),
                                     channels=swf.getnchannels(),
                                     rate=swf.getframerate(),
                                     output=True)
@@ -427,7 +430,8 @@ class RecordPage(Page):
         print("editing audio path", self.editing_audio_path)
         with wave.open(str(self.editing_audio_path), 'rb') as swf:
             # Open the stream
-            self.stream = self.p.open(format=self.p.get_format_from_width(swf.getsampwidth()),
+            self.stream = self.p.open(input_device_index=self.audio_input,
+                                    format=self.p.get_format_from_width(swf.getsampwidth()),
                                     channels=swf.getnchannels(),
                                     rate=swf.getframerate(),
                                     output=True)

@@ -4,7 +4,6 @@ import tkinter as tk
 from tkinter import Listbox, Scrollbar, Button, PhotoImage, filedialog, Canvas
 from pathlib import Path
 from page import Page
-from audio_player import AudioPlayer
 
 ASSETS_PATH = Path("./assets/frame0")
 AUDIO_DIR = Path("./audio")
@@ -317,6 +316,9 @@ class LeftPanel(Page):
             milliseconds = int((current_time - int(current_time)) * 1000)
             milliseconds_str = f"{milliseconds:02d}"[:2]  # Ensure milliseconds have two digits
             current_time_str = f"{int(minutes):02d}:{int(seconds):02d}:{milliseconds_str}"
+
+            # update audio slider
+            self.audio_slider.set(current_time / total_time)
 
             self.canvas.itemconfig(self.current_time_text, text=f"{current_time_str} / {total_time_str}")
             time.sleep(0.1)

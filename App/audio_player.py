@@ -21,7 +21,7 @@ class AudioPlayer:
         self.speed = 1.0
         self.volume = 0.5
         self.start_time = 0 # from 0 to 1, 0 is the start of the audio, 1 is the end
-        self.end_time = 1 # from 0 to 1, 0 is the start of the audio, 1 is the end
+        self.end_time = None # from 0 to 1, 0 is the start of the audio, 1 is the end
         self.current_time = 0 # from 0 to 1
         self.start_nframes = 0
         self.current_nframes = 0
