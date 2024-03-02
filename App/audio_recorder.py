@@ -10,9 +10,10 @@ filename = "./audio/output.wav"
 
 class Recorder:
 
-    def __init__(self):
+    def __init__(self, audio_input = 0):
         self.record_state = "NOT_RECORDING"
         self.p = pyaudio.PyAudio()
+        self.audio_input = audio_input
 
     def is_recording(self):
         return self.record_state == "RECORDING"
@@ -22,7 +23,13 @@ class Recorder:
 
     def start_recording(self):
         if self.record_state == "NOT_RECORDING":
-            self.stream = self.p.open(format=sample_format,
+            
+            # get microphone input info
+            channels = self.p.get_default_input_device_info()['maxInputChannels']
+            fs = int(self.p.get_default_input_device_info()['defaultSampleRate'])
+            
+            self.stream = self.p.open(input_device_index=self.audio_input,
+                                      format=sample_format,
                                       channels=channels,
                                       rate=fs,
                                       frames_per_buffer=chunk,

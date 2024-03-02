@@ -20,7 +20,7 @@ class Navbar(tk.Frame):
         self.record_button = tk.Button(
             self,
             text="Record",
-            bg="white",
+            bg="lightgrey",
             fg="black",
             font=("Arial", 12),
             relief="flat",
@@ -32,7 +32,7 @@ class Navbar(tk.Frame):
         self.edit_button = tk.Button(
             self,
             text="Edit",
-            bg="white",
+            bg="lightgrey",
             fg="black",
             font=("Arial", 12),
             relief="flat",
@@ -44,7 +44,7 @@ class Navbar(tk.Frame):
         self.delete_button = tk.Button(
             self,
             text="",
-            bg="white",
+            bg="lightgrey",
             fg="black",
             font=("Arial", 12),
             relief="flat",
@@ -56,7 +56,7 @@ class Navbar(tk.Frame):
         self.add_button = tk.Button(
             self,
             text="",
-            bg="white",
+            bg="lightgrey",
             fg="black",
             font=("Arial", 12),
             relief="flat",

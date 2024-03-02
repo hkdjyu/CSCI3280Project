@@ -8,9 +8,18 @@ from navbar import Navbar
 
 from audio_player import AudioPlayer
 
+import pyaudio
+
 window_size = "1280x720"
 
 audio_player = AudioPlayer()
+
+audio_input = 0 # default audio input
+
+def set_audio_input(i):
+    global audio_input
+    audio_input = i
+
 
 class MainView(tk.Frame):
     def __init__(self, *args, **kwargs):
@@ -27,7 +36,7 @@ class MainView(tk.Frame):
         self.left_panel = LeftPanel(audio_player, self.set_selected_audio_path, self)
         self.left_panel.grid(row=0, column=0, sticky="s")
 
-        self.main_panel = RecordPage(audio_player, self.left_panel, self)
+        self.main_panel = RecordPage(audio_player, self.left_panel, audio_input, self)
         self.main_panel.grid(row=0, column=1)
 
         self.edit_panel = EditPage(audio_player, self)
@@ -64,8 +73,7 @@ class MainView(tk.Frame):
         print(f"Switching to {page_name}")
         self.hide_page("record")
         self.hide_page("edit")
-        self.show_page(page_name)
-       
+        self.show_page(page_name) 
 
 if __name__ == "__main__":
     root = tk.Tk()
@@ -76,4 +84,20 @@ if __name__ == "__main__":
     main = MainView(root)
     main.pack(side="top", fill="both", expand=True)
     root.wm_geometry(window_size)
+    
+    
+    menu_bar = tk.Menu(root)
+    device_menu = tk.Menu(menu_bar, tearoff=0)
+    
+    p = pyaudio.PyAudio()
+    info = p.get_host_api_info_by_index(0)
+    numdevices = info.get('deviceCount')
+    for i in range(0, numdevices):
+        if (p.get_device_info_by_host_api_device_index(0, i).get('maxInputChannels')) > 0:
+            device_menu.add_command(label=p.get_device_info_by_host_api_device_index(0, i).get('name'), command=lambda i=i: set_audio_input(i))
+
+    menu_bar.add_cascade(label="Devices", menu=device_menu)
+    root.config(menu=menu_bar)
+
+
     root.mainloop()
