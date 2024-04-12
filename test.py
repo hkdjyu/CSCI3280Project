@@ -106,7 +106,7 @@ class VoiceChatApp:
         self.chat_textbox = tk.Text(root)
         self.chat_textbox.pack()
         self.chat_textbox.config(width=30, height=1)
-
+        self.chat_textbox.bind("<Return>", lambda e: self.send_message())
 
         self.send_message_button = tk.Button(root, text="Send Message", command=self.send_message)
         self.send_message_button.pack()
@@ -150,13 +150,15 @@ class VoiceChatApp:
         return
     
     def on_refresh_room_click(self):
-        if self.is_refreshing is not True:
+        if self.is_refreshing is False:
             self.is_refreshing = True
+            self.join_chat_room_button.config(state=tk.DISABLED)
             self.refresh_button.config(text=" Stop ")
             self.refresh_room_thread = threading.Thread(target=self.update_chat_rooms)
             self.refresh_room_thread.start()
         else:
             self.is_refreshing = False
+            self.join_chat_room_button.config(state=tk.NORMAL)
             self.refresh_button.config(text="Refresh")
         return
 
@@ -342,6 +344,8 @@ class VoiceChatApp:
 
     def join_chat_room(self):
         if self.selected_chat_room:
+            if self.is_refreshing:
+                self.on_refresh_room_click()
             self.set_enable_settings(tk.DISABLED)
             chat_room_port = int(self.selected_chat_room.split("(")[1].split(")")[0])
             print(f"Joining chat room {chat_room_port}")
