@@ -71,6 +71,9 @@ class AudioToText(Page):
         self.converted_textbox.place(x=100, y=250, width=600, height=400)
 
         self.audio_text_converter = AudioTextConverter()
+        self.audio_path = None
+
+        self.is_showing = False
         
         
 
@@ -78,16 +81,18 @@ class AudioToText(Page):
 
     def on_selected_audio_path_changes(self, path):
         # if path is too long, display the first 10 and last 30 characters
+        if (not self.is_showing):
+            return
         if len(str(path)) > 70:
-            path = str(path)[:30] + " ... " + str(path)[-40:]
-        self.canvas.itemconfig(self.selected_audio_path_text, text=path)
+            path_text = str(path)[:30] + " ... " + str(path)[-40:]
+        else:
+            path_text = str(path)
+        self.canvas.itemconfig(self.selected_audio_path_text, text=path_text)
+        self.audio_path = path
 
     def on_convert_button_click(self):
-        # Get the selected audio path
-        selected_audio_path = self.canvas.itemcget(self.selected_audio_path_text, "text")
-
         # Check if the audio path is empty
-        if selected_audio_path == "No audio selected":
+        if self.audio_path == None or self.audio_path == "":
             messagebox.showerror("Error", "Please select an audio file")
             return
 
@@ -95,7 +100,7 @@ class AudioToText(Page):
         self.converted_textbox.delete(1.0, "end")
         
         # Convert the audio to text
-        self.convert_audio_to_text(selected_audio_path)
+        self.convert_audio_to_text(self.audio_path)
 
     def convert_audio_to_text(self, audio_path):
         # Simulate the conversion process
@@ -111,6 +116,15 @@ class AudioToText(Page):
     def on_audio_chunk_converted(self, text, i, total):
         print(f"Chunk {i}/{total}:", text)
         self.canvas.itemconfig(self.selected_audio_path_text, text=f"Converting... {i}/{total}")
+
+    def show(self):
+        super().show()
+        self.is_showing = True
+
+    def hide(self):
+        super().hide()
+        self.is_showing = False
+    
 
 
 

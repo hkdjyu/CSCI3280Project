@@ -2,14 +2,12 @@
 
 import tkinter as tk
 from page_record import RecordPage
-from page_edit import EditPage
+from page_chat import ChatPage
 from page_audio_to_text import AudioToText
 from page_noise_removal import NoiseRemoval
 from panel_left import LeftPanel
 from navbar import Navbar
-
 from audio_player import AudioPlayer
-
 import pyaudio
 
 window_size = "1280x720"
@@ -41,23 +39,23 @@ class MainView(tk.Frame):
         self.main_panel = RecordPage(audio_player, self.left_panel, audio_input, self)
         self.main_panel.grid(row=0, column=1)
 
-        self.edit_panel = EditPage(audio_player, self)
-        self.edit_panel.grid(row=0, column=1)
+        self.chat_panel = ChatPage(audio_player, self)
+        self.chat_panel.grid(row=0, column=1)
 
         self.audio_to_text_panel = AudioToText(audio_player, self.left_panel, audio_input, self)
         self.audio_to_text_panel.grid(row=0, column=1)
 
-        self.noise_removal_panel = NoiseRemoval(audio_player, self.left_panel, audio_input, self)
-        self.noise_removal_panel.grid(row=0, column=1)
+        # self.noise_removal_panel = NoiseRemoval(audio_player, self.left_panel, audio_input, self)
+        # self.noise_removal_panel.grid(row=0, column=1)
 
 
 
         # Create a dictionary to store the pages
         self.pages = {
             "record": self.main_panel,
-            "edit": self.edit_panel,
+            "chat": self.chat_panel,
             "audio_to_text": self.audio_to_text_panel,
-            "noise_removal": self.noise_removal_panel
+            # "noise_removal": self.noise_removal_panel
         }
 
         # Show the record page
@@ -86,8 +84,12 @@ class MainView(tk.Frame):
     def switch_page(self, page_name):
         print(f"Switching to {page_name}")
         for page in self.pages:
-            self.hide_page(page)
-        self.show_page(page_name) 
+            if page != page_name:
+                self.hide_page(page)
+        if page_name in self.pages:
+            self.show_page(page_name)
+        else:
+            print(f"Page {page_name} not found")
 
 if __name__ == "__main__":
     root = tk.Tk()
@@ -112,6 +114,5 @@ if __name__ == "__main__":
 
     menu_bar.add_cascade(label="Devices", menu=device_menu)
     root.config(menu=menu_bar)
-
 
     root.mainloop()

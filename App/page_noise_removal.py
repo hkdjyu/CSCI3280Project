@@ -105,6 +105,7 @@ class NoiseRemoval(Page):
         self.noise_level_slider.place(x=280, y=200)
 
         self.noise_remover_level = 1
+        self.noise_level_slider.set(1)
         
         self.fig = plt.figure(figsize=(8, 2))
         self.ax = self.fig.add_subplot(111)
@@ -116,15 +117,19 @@ class NoiseRemoval(Page):
         NoiseRemoval.instatiated_objects.append(self)
 
         print(len(NoiseRemoval.instatiated_objects))
+
+        self.is_showing = False
         
     def on_selected_audio_path_changes(self, path):
         # if path is too long, display the first 10 and last 30 characters
         if len(str(path)) > 70:
-            path = str(path)[:30] + " ... " + str(path)[-40:]
-        self.canvas.itemconfig(self.selected_audio_path_text, text=path)
+            path_text = str(path)[:30] + " ... " + str(path)[-40:]
+        else:
+            path_text = str(path)
+        self.canvas.itemconfig(self.selected_audio_path_text, text=path_text)
         self.selected_audio_path = path
-        #if self.audio_player.is_playing():
-        #    self.start_visualization()
+        # if self.is_showing:
+        #     self.start_visualization()
 
     def on_remove_noise_clicked(self):
         if self.selected_audio_path is None:
@@ -171,44 +176,56 @@ class NoiseRemoval(Page):
         
         while True:
             if audio_player.is_playing() or audio_player.is_paused():
-                # Get the current progress of the audio
-                current_time, total_time = audio_player.get_time()  # Adjust this line based on your audio player implementation
-                    # Convert time to minutes and seconds
-                current_time_min = int(current_time // 60)
-                current_time_sec = int(current_time % 60)
-                total_time_min = int(total_time // 60)
-                total_time_sec = int(total_time % 60)
+                try:
+                    # Get the current progress of the audio
+                    current_time, total_time = audio_player.get_time()  # Adjust this line based on your audio player implementation
+                        # Convert time to minutes and seconds
+                    current_time_min = int(current_time // 60)
+                    current_time_sec = int(current_time % 60)
+                    total_time_min = int(total_time // 60)
+                    total_time_sec = int(total_time % 60)
 
-                if line:
-                    line.remove()
-                # Plot a line to represent the current progress
-                line = self.ax.axvline(x=current_time, color='r')
+                    if line:
+                        line.remove()
+                    # Plot a line to represent the current progress
+                    line = self.ax.axvline(x=current_time, color='r')
 
-                if annotation:
-                    annotation.remove()
-                # Add time text annotation
-                time_text = f"Time: {current_time_min:02d}:{current_time_sec:02d} / {total_time_min:02d}:{total_time_sec:02d}"
-                annotation = self.ax.text(0.5, 0, time_text, transform=self.ax.transAxes, ha='center', va='top')
-                
-                # Remove axes and labels
-                self.ax.axis('off')
+                    if annotation:
+                        annotation.remove()
+                    # Add time text annotation
+                    time_text = f"Time: {current_time_min:02d}:{current_time_sec:02d} / {total_time_min:02d}:{total_time_sec:02d}"
+                    annotation = self.ax.text(0.5, 0, time_text, transform=self.ax.transAxes, ha='center', va='top')
+                    
+                    # Remove axes and labels
+                    self.ax.axis('off')
 
-                # Update the figure canvas
-                self.canvas_fig.draw_idle()
+                    # Update the figure canvas
+                    self.canvas_fig.draw_idle()
 
-                if not(audio_player.is_playing()) and not (audio_player.is_paused()):
-                    break
-                # Pause for a short duration
-                time.sleep(0.01)
+                    if not(audio_player.is_playing()) and not (audio_player.is_paused()):
+                        break
+                    # Pause for a short duration
+                    time.sleep(0.01)
+                except:
+                    pass
 
     def on_play_started_obj(self):
         # print("Noise removal page: play started(instance)")
-        self.start_visualization()
+        if self.is_showing:
+            self.start_visualization()
 
     def on_play_stopped_obj(self):
         print("Noise removal page: play stopped(instance)")
 
     def on_play_paused_obj(self):
         print("Noise removal page: play paused(instance)")
+
+    def show(self):
+        super().show()
+        self.is_showing = True
+
+    def hide(self):
+        super().hide()
+        self.is_showing = False
     
 
