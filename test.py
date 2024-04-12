@@ -2,6 +2,7 @@ import tkinter as tk
 import asyncio
 import websockets
 import threading
+import pyaudio
 
 class VoiceChatApp:
     def __init__(self, root):
@@ -81,6 +82,7 @@ class VoiceChatApp:
 
         self.chat_room_listbox = tk.Listbox(root)
         self.chat_room_listbox.pack()
+        self.chat_room_listbox.config(width=20, height=5)
         self.chat_room_listbox.bind("<<ListboxSelect>>", self.on_room_select)
 
         # layout of two columns
@@ -111,6 +113,15 @@ class VoiceChatApp:
         self.send_message_button = tk.Button(root, text="Send Message", command=self.send_message)
         self.send_message_button.pack()
 
+        self.divder5 = tk.Frame(root, height=2, bd=1, relief=tk.SUNKEN)
+        self.divder5.pack(fill=tk.X, padx=5, pady=5)
+
+        self.mute_button = tk.Button(root, text="Unmute", command=self.on_mute_click)
+        self.mute_button.pack()
+
+        self.divider6 = tk.Frame(root, height=2, bd=1, relief=tk.SUNKEN)
+        self.divider6.pack(fill=tk.X, padx=5, pady=5)
+
         # Initialize variables
         self.username = self.name_entry.get()
         self.ip_address = self.ip_entry.get()
@@ -120,11 +131,19 @@ class VoiceChatApp:
         self.server = None
         self.connected_client_ports = []
         self.client = None
+        self.connected_server_port = None
         self.server_thread = None
         self.client_thread = None
         self.refresh_room_thread = None
         self.is_refreshing = False
         self.available_chat_rooms = []
+
+        self.is_muted = True
+        self.pyaudio = pyaudio.PyAudio()
+        self.input_stream = None
+        self.output_stream = None
+        self.audio_input_thread = None
+        self.audio_output_thread = None
 
     def on_name_change(self):
         self.username = self.name_entry.get()
@@ -229,7 +248,7 @@ class VoiceChatApp:
                 print(f"Server started at ws://{ip}:{port}")
                 self.status_label.config(text=f"Server started at ws://{ip}:{port}")
                 while self.is_running:
-                    await asyncio.sleep(0.1)  # Check every 0.1 second
+                    await asyncio.sleep(0.01)  # Check every 0.1 second
         except asyncio.CancelledError:
             print("Server stopped.")
         finally:
@@ -265,14 +284,27 @@ class VoiceChatApp:
 
                 # listen for messages
                 while self.is_running:
-                    msg = await websocket.recv()
-                    print(f"Received message: \n{msg}\n")
-                    msg_username, msg_type, msg_string = self.decode_string_message(msg)
-                    if msg_username and msg_type and msg_string:
-                        if msg_type == "text-message":
-                            self.chat_listbox.insert(tk.END, f"{msg_username}: {msg_string}\n")
-                            # self.chat_listbox.see(tk.END)
-                    await asyncio.sleep(0.1)
+                    try:
+                        msg = await websocket.recv()
+                    except websockets.exceptions.ConnectionClosedError:
+                        print("Error: Connection closed.")
+                        break
+                    if isinstance(msg, str):
+                        print(f"Received message: \n{msg}\n")
+                        msg_username, msg_type, msg_string = self.decode_string_message(msg)
+                        if msg_username and msg_type and msg_string:
+                            if msg_type == "text-message":
+                                self.chat_listbox.insert(tk.END, f"{msg_username}: {msg_string}\n")
+                                # self.chat_listbox.see(tk.END)
+                    elif isinstance(msg, bytes):
+                        print(f"Received audio message.")
+                        # play audio
+
+                        if self.output_stream is None:
+                            self.output_stream = self.pyaudio.open(format=pyaudio.paInt16, channels=1, rate=44100, output=True)
+                        self.output_stream.write(msg)
+
+                    await asyncio.sleep(0.01)
         
         # print(f"Client name: {msg_username}\nmsg_type: {msg_type}\nmsg_string: {msg_string}")
 
@@ -324,16 +356,27 @@ class VoiceChatApp:
                     self.chat_listbox.insert(tk.END, f"Connected to {recv_msg_name}'s Room\n")
                     # self.chat_listbox.see(tk.END)
 
+                    self.connected_server_port = int(recv_msg_string.split(":")[2])
+
                     # listen for messages
                     while self.is_running:
                         msg = await websocket.recv()
-                        print(f"Received message: \n{msg}\n")
-                        msg_username, msg_type, msg_string = self.decode_string_message(msg)
-                        if msg_username and msg_type and msg_string:
-                            if msg_type == "text-message":
-                                self.chat_listbox.insert(tk.END, f"{msg_username}: {msg_string}\n")
-                                # self.chat_listbox.see(tk.END)
-                        await asyncio.sleep(0.1)
+                        if isinstance(msg, str):
+                            print(f"Received message: \n{msg}\n")
+                            msg_username, msg_type, msg_string = self.decode_string_message(msg)
+                            if msg_username and msg_type and msg_string:
+                                if msg_type == "text-message":
+                                    self.chat_listbox.insert(tk.END, f"{msg_username}: {msg_string}\n")
+                                    # self.chat_listbox.see(tk.END)
+                        elif isinstance(msg, bytes):
+                            print(f"Received audio message.")
+                            # play audio
+
+                            if self.output_stream is None:
+                                self.output_stream = self.pyaudio.open(format=pyaudio.paInt16, channels=1, rate=44100, output=True)
+                            self.output_stream.write(msg)
+
+                        await asyncio.sleep(0.01)
 
         except asyncio.CancelledError:
             print("Connection stopped.")
@@ -379,10 +422,90 @@ class VoiceChatApp:
             # self.chat_listbox.see(tk.END)
             await self.server.send(msg)
         return
+    
+    def on_mute_click(self):
+        if self.is_muted:
+            # unmute and start keep sending audio
+            self.is_muted = False
+            self.mute_button.config(text="Mute")
+            
+            if self.client:
+                self.audio_input_thread = threading.Thread(target=lambda: asyncio.run(self.send_audio()))
+                self.audio_input_thread.start()
+
+            elif self.server:
+                self.audio_input_thread = threading.Thread(target=lambda: asyncio.run(self.send_audio()))
+                self.audio_input_thread.start()
+
+        else:
+            # mute and stop sending audio
+            self.is_muted = True
+            self.mute_button.config(text="Unmute")
+            if self.input_stream:
+                self.input_stream.stop_stream()
+                self.input_stream.close()
+                self.input_stream = None
+        return
+    
+    async def send_audio(self):
+        if self.is_muted:
+            return
+        
+        CHUNK = 1024
+        FORMAT = pyaudio.paInt16
+        CHANNELS = 1
+        RATE = 44100
+        if self.output_stream is None:
+            self.output_stream = self.pyaudio.open(format=FORMAT, channels=CHANNELS, rate=RATE, input=True, frames_per_buffer=CHUNK)
+
+        print("Audio sending started . . ", end="")
+        if self.client:
+            # send audio
+            while self.is_running and not self.is_muted:
+                data = self.output_stream.read(CHUNK)
+                await self.client.send(data)
+                print (f"Sent audio data.")
+
+                # DEBUG
+                # await self.client.send(self.encode_string_message(self.username, "text-message", "Hello, world!"))
+                # await asyncio.sleep(1)
+            
+        elif self.server:
+            # send audio
+            while self.is_running and not self.is_muted:
+                data = self.output_stream.read(CHUNK)
+                await self.server.send(data)   
+                print (f"Sent audio data.")
+
+        print(". . Audio sending stopped.")  
+        return
+
 
     def on_close(self):
         self.is_running = False
+        # if self.input_stream:
+        #     self.input_stream.stop_stream()
+        #     self.input_stream.close()
+        # if self.output_stream:
+        #     self.output_stream.stop_stream()
+        #     self.output_stream.close()
+        # if self.pyaudio:
+        #     self.pyaudio.terminate()
+
         self.root.destroy()
+
+        # if self.server:
+        #     self.server.close()
+
+        # if self.client:
+        #     self.client.close()
+
+        if self.server_thread:
+            self.server_thread.join()
+        if self.client_thread:
+            self.client_thread.join()
+        if self.refresh_room_thread:
+            self.refresh_room_thread.join()
 
 def start_app():
     root = tk.Tk()
