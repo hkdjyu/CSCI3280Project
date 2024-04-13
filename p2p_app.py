@@ -228,7 +228,8 @@ class VoiceChatApp(tk.Tk):
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.OS == "windows":
                 # client_socket.setblocking(False) # set non-blocking on windows for faster response
-                client_socket.settimeout(0.01) # set timeout for faster response
+                client_socket.settimeout(0.1) # set timeout for faster response
+            client_socket.settimeout(0.1) # set timeout for faster response
             client_socket.connect((ip, port))
             client_socket.send(b'ping')
             name = client_socket.recv(1024).decode()
