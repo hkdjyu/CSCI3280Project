@@ -398,10 +398,11 @@ class VoiceChatApp(tk.Tk):
         return
     
     def get_my_local_ip(self):
-        hostname = socket.getfqdn()
-        print(f"Hostname: {hostname}")
-        ip = socket.gethostbyname(hostname)
-        print(f"IP Address: {ip}")
+        try:
+            hostname = socket.getfqdn()
+            ip = socket.gethostbyname(hostname)
+        except:
+            ip = "localhost"
         return ip
 
     def on_closing(self):
