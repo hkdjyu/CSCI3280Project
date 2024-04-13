@@ -9,11 +9,11 @@ class VoiceChatServer:
         self.NAME = name
         self.HOST = host
         self.PORT = port
-        self.BUFFERSIZE = 1024
+        self.BUFFERSIZE = 2048
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 44100
-        self.CHUNK = 1024
+        self.CHUNK = 2048
         self.is_running = False
         self.server_socket = None
         self.client_sockets = []

@@ -11,11 +11,11 @@ class VoiceChatClient:
         self.NAME = name
         self.HOST = host
         self.PORT = port
-        self.BUFFERSIZE = 1024
+        self.BUFFERSIZE = 2048
         self.FORMAT = pyaudio.paInt16
         self.CHANNELS = 1
         self.RATE = 44100
-        self.CHUNK = 1024
+        self.CHUNK = 2048
         self.update_text_listbox = update_text_listbox
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # if os == 'windows':
