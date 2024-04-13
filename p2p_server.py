@@ -42,8 +42,8 @@ class VoiceChatServer:
     def start(self):
         self.is_running = True
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.OS == 'windows':
-            server_socket.setblocking(False) # set non-blocking on windows for faster response
+        # if self.OS == 'windows':
+        #     server_socket.setblocking(False) # set non-blocking on windows for faster response
         server_socket.bind((self.HOST, self.PORT))
         server_socket.listen()
 

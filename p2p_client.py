@@ -12,11 +12,13 @@ class VoiceChatClient:
         self.RATE = 44100
         self.CHUNK = 1024
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if os == 'windows':
-            self.client_socket.setblocking(False) # set non-blocking on windows for faster response
+        # if os == 'windows':
+            # self.client_socket.setblocking(False) # set non-blocking on windows for faster response
         self.is_running = False
         self.is_deafened = False
         self.is_muted = False
+        self.is_recording = False
+        self.recorded_frames = []
 
         self.input_device_index = input_device_index
         self.output_device_index = output_device_index
@@ -40,12 +42,28 @@ class VoiceChatClient:
     def set_deafen_status(self, status):
         self.is_deafened = status
         return
+    
+    def set_record_status(self, status):
+        if status == True:
+            # start recording
+            self.recorded_frames = []
+        else:
+            # stop recording
+            # save recorded frames to a file
+            if len(self.recorded_frames) > 0:
+                print("Saving recorded audio to recorded_audio.wav")
+                with open('recorded_audio.wav', 'wb') as f:
+                    f.write(b''.join(self.recorded_frames))
+        self.is_recording = status
+        return
 
     def receive_audio(self):
         while self.is_running:
             try:
                 data = self.client_socket.recv(self.BUFFERSIZE)
                 self.stream.write(data) if not self.is_deafened else None
+                if self.is_recording:
+                    self.recorded_frames.append(data)
             except ConnectionResetError:
                 print("Connection with server closed.")
                 break
@@ -58,6 +76,8 @@ class VoiceChatClient:
             try:
                 data = self.stream.read(self.CHUNK)
                 self.client_socket.send(data) if not self.is_muted else None
+                if self.is_recording and not self.is_muted:
+                    self.recorded_frames.append(data)
             except ConnectionResetError:
                 print("Connection with server closed.")
                 break

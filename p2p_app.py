@@ -45,6 +45,7 @@ class VoiceChatApp(tk.Tk):
 
         self.mute_status = False
         self.deafen_status = False
+        self.record_status = False
 
         self.server = None
         self.client = None
@@ -146,6 +147,9 @@ class VoiceChatApp(tk.Tk):
         self.deafen_button = tk.Button(self.right_col1, text="Deafen", command=self.on_deafen_button_click)
         self.deafen_button.pack(side=tk.TOP)
 
+        self.record_button = tk.Button(self, text="Record", command=self.on_record_button_click)
+        self.record_button.pack(side=tk.TOP)
+
     def list_microphones(self):
         p = pyaudio.PyAudio()
         microphone_list = []
@@ -182,7 +186,8 @@ class VoiceChatApp(tk.Tk):
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             if self.OS == "windows":
-                client_socket.setblocking(False) # set non-blocking on windows for faster response
+                # client_socket.setblocking(False) # set non-blocking on windows for faster response
+                client_socket.settimeout(0.1) # set timeout for faster response
             client_socket.connect((ip, port))
             client_socket.send(b'ping')
             name = client_socket.recv(1024).decode()
@@ -211,7 +216,7 @@ class VoiceChatApp(tk.Tk):
             port = self.check_free_port()
             if port is not None:
                 self.port = port
-                self.server = VoiceChatServer(name=self.room_name, host=self.ip_address, port=port)
+                self.server = VoiceChatServer(os=self.OS, name=self.room_name, host=self.ip_address, port=port)
                 server_thread = Thread(target=self.server.start)
                 server_thread.start()
             else:
@@ -229,7 +234,7 @@ class VoiceChatApp(tk.Tk):
                 output_device_index = i
 
         
-        self.client = VoiceChatClient(host=host, port=port, input_device_index=input_device_index, output_device_index=output_device_index)
+        self.client = VoiceChatClient(os=self.OS ,host=host, port=port, input_device_index=input_device_index, output_device_index=output_device_index)
         client_thread = Thread(target=self.client.start)
         client_thread.start()
         return
@@ -284,6 +289,20 @@ class VoiceChatApp(tk.Tk):
                 self.client.set_deafen_status(True)
             self.deafen_button.config(text="Undeafen")
             self.deafen_status = True
+
+    def on_record_button_click(self):
+        if self.record_status:
+            # set stop recording
+            if self.client is not None:
+                self.client.set_record_status(False)
+            self.record_button.config(text="Record")
+            self.record_status = False
+        else:
+            # set start recording
+            if self.client is not None:
+                self.client.set_record_status(True)
+            self.record_button.config(text="Stop Recording")
+            self.record_status = True
     
     def set_settings_enabled(self, status):
         self.room_name_entry.config(state=status)
