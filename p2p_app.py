@@ -20,6 +20,7 @@
 import tkinter as tk
 import socket
 import pyaudio
+import os
 from threading import Thread
 
 from p2p_client import VoiceChatClient
@@ -35,6 +36,8 @@ class VoiceChatApp(tk.Tk):
         
         self.geometry("400x720")
         self.resizable(False, False)
+
+        self.OS = "windows" if os.name == "nt" else "mac/linux"
 
         self.ip_address = "localhost"
         self.port = "3280"
@@ -178,6 +181,8 @@ class VoiceChatApp(tk.Tk):
     def ping(self, ip, port):
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            if self.OS == "windows":
+                client_socket.setblocking(False) # set non-blocking on windows for faster response
             client_socket.connect((ip, port))
             client_socket.send(b'ping')
             name = client_socket.recv(1024).decode()
@@ -233,9 +238,13 @@ class VoiceChatApp(tk.Tk):
     def refresh(self):
         self.chat_rooms_listbox.delete(0, tk.END)
         for port in PORT_RANGE:
+            print(f"Checking port {port}.", end=" ")
             status, name = self.ping(self.ip_address, port)
             if status:
                 self.chat_rooms_listbox.insert(tk.END, f"{name} - {self.ip_address}:{port}")
+                print("Found.")
+            else:
+                print("Not found.")
         return
     
     def join_room(self):
@@ -301,6 +310,15 @@ class VoiceChatApp(tk.Tk):
         return
 
 if __name__ == "__main__":
+
+    # if windows, set
+    if os.name == 'nt':
+        os.system("cls")
+
+    # elif mac or linux
+    else:
+        os.system("clear")
+
     app = VoiceChatApp()
     app.protocol("WM_DELETE_WINDOW", app.on_closing)
     app.mainloop()

@@ -4,7 +4,8 @@ import pyaudio
 import threading
 
 class VoiceChatServer:
-    def __init__(self, name='server', host='localhost', port=3280):
+    def __init__(self, os='windows', name='server', host='localhost', port=3280):
+        self.OS = os
         self.NAME = name
         self.HOST = host
         self.PORT = port
@@ -41,6 +42,8 @@ class VoiceChatServer:
     def start(self):
         self.is_running = True
         server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if self.OS == 'windows':
+            server_socket.setblocking(False) # set non-blocking on windows for faster response
         server_socket.bind((self.HOST, self.PORT))
         server_socket.listen()
 
