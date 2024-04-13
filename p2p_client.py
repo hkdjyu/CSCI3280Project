@@ -21,8 +21,8 @@ class VoiceChatClient:
         # if os == 'windows':
             # self.client_socket.setblocking(False) # set non-blocking on windows for faster response
         self.is_running = False
-        self.is_deafened = False
-        self.is_muted = False
+        self.is_deafened = True
+        self.is_muted = True
         self.is_recording = False
         self.recorded_frames = []
 

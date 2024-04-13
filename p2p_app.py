@@ -27,7 +27,7 @@ from threading import Thread
 from p2p_client import VoiceChatClient
 from p2p_server import VoiceChatServer
 
-PORT_RANGE = range(3280, 3299) # 20 ports
+PORT_RANGE = range(3280, 3290) # 10 ports from 3280 to 3289
 
 class VoiceChatApp(tk.Tk):
     def __init__(self):
@@ -40,12 +40,12 @@ class VoiceChatApp(tk.Tk):
 
         self.OS = "windows" if os.name == "nt" else "mac/linux"
 
-        self.ip_address = "localhost"
-        self.port = "3280"
+        self.ip_address = self.get_my_local_ip()
+        self.port = str(PORT_RANGE[0])
         self.username = "user"
 
-        self.mute_status = False
-        self.deafen_status = False
+        self.mute_status = True
+        self.deafen_status = True
         self.record_status = False
 
         self.server = None
@@ -61,7 +61,7 @@ class VoiceChatApp(tk.Tk):
         self.set_settings_enabled(tk.NORMAL)
         self.set_chatting_enabled(tk.DISABLED)
 
-        self.refresh() # if self.OS != "windows" else None # refresh at the beginning if not windows
+        # self.refresh() # if self.OS != "windows" else None # refresh at the beginning if not windows
 
     def create_widgets(self):
 
@@ -81,7 +81,7 @@ class VoiceChatApp(tk.Tk):
         self.username_set_button = tk.Button(self.layout1, text="Set", command=self.set_username)
         self.username_set_button.pack(side=tk.LEFT)
 
-        self.ip_address_label = tk.Label(self, text="IP Address: localhost")
+        self.ip_address_label = tk.Label(self, text="IP Address: "+str(self.ip_address))
         self.ip_address_label.pack(pady=5)
 
         self.layout2 = tk.Frame(self)
@@ -89,7 +89,7 @@ class VoiceChatApp(tk.Tk):
 
         self.ip_address_entry = tk.Entry(self.layout2)
         self.ip_address_entry.pack(side=tk.LEFT)
-        self.ip_address_entry.insert(0, "localhost")
+        self.ip_address_entry.insert(0, self.ip_address)
         self.ip_address_entry.bind("<Return>", self.set_ip_address)
 
         self.ip_address_set_button = tk.Button(self.layout2, text="Set", command=self.set_ip_address)
@@ -109,20 +109,23 @@ class VoiceChatApp(tk.Tk):
         # self.port_set_button.pack(side=tk.LEFT)
 
 
-        self.create_room_button = tk.Button(self, text="Create", command=self.create_room)
+        self.create_room_button = tk.Button(self, text="Create", command=self.create_room, fg="black", bg="lightgreen")
         self.create_room_button.pack(pady=5)
 
         self.divider1 = tk.Frame(self, height=2, bd=1, relief=tk.SUNKEN)
         self.divider1.pack(fill=tk.X, padx=5, pady=5)
 
-        self.refresh_button = tk.Button(self, text="Refresh", command=self.refresh)
-        self.refresh_button.pack(pady=5)
-
         self.chat_rooms_listbox = tk.Listbox(self, width=30, height=5)
         self.chat_rooms_listbox.pack(pady=5)
 
-        self.join_button = tk.Button(self, text="Join Room", command=self.join_room)
-        self.join_button.pack(pady=5)
+        self.layout3 = tk.Frame(self)
+        self.layout3.pack(pady=5)
+
+        self.refresh_button = tk.Button(self.layout3, text="Refresh", command=self.refresh, fg="black", bg="lightblue")
+        self.refresh_button.pack(side=tk.LEFT, padx=10)
+
+        self.join_button = tk.Button(self.layout3, text="Join Room", command=self.join_room, fg="black", bg="lightgreen")
+        self.join_button.pack(side=tk.LEFT, padx=10)
 
         self.divider2 = tk.Frame(self, height=2, bd=1, relief=tk.SUNKEN)
         self.divider2.pack(fill=tk.X, padx=5, pady=5)
@@ -148,13 +151,13 @@ class VoiceChatApp(tk.Tk):
         self.layout5 = tk.Frame(self)
         self.layout5.pack(pady=5)
 
-        self.mute_button = tk.Button(self.layout5, text="Mute", command=self.on_mute_button_click)
+        self.mute_button = tk.Button(self.layout5, text="Unmute", command=self.on_mute_button_click, fg="black", bg="pink")
         self.mute_button.pack(side=tk.LEFT,padx=10,pady=5)
 
-        self.record_button = tk.Button(self.layout5, text="Record", command=self.on_record_button_click)
+        self.record_button = tk.Button(self.layout5, text="Record", command=self.on_record_button_click, fg="black", bg="lightyellow")
         self.record_button.pack(side=tk.LEFT,padx=10,pady=5)
 
-        self.deafen_button = tk.Button(self.layout5, text="Deafen", command=self.on_deafen_button_click)
+        self.deafen_button = tk.Button(self.layout5, text="Undeafen", command=self.on_deafen_button_click, fg="black", bg="pink")
         self.deafen_button.pack(side=tk.LEFT,padx=10,pady=5)
 
         self.divider4 = tk.Frame(self, height=2, bd=1, relief=tk.SUNKEN)
@@ -226,9 +229,6 @@ class VoiceChatApp(tk.Tk):
     def ping(self, ip, port):
         try:
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            if self.OS == "windows":
-                # client_socket.setblocking(False) # set non-blocking on windows for faster response
-                client_socket.settimeout(0.1) # set timeout for faster response
             client_socket.settimeout(0.1) # set timeout for faster response
             client_socket.connect((ip, port))
             client_socket.send(b'ping')
@@ -282,8 +282,10 @@ class VoiceChatApp(tk.Tk):
         client_thread.start()
         return
 
-    
     def refresh(self):
+        Thread(target=self.refresh_task).start()
+    
+    def refresh_task(self):
         self.chat_rooms_listbox.delete(0, tk.END)
         for port in PORT_RANGE:
             print(f"Checking port {port}.", end=" ")
@@ -311,13 +313,13 @@ class VoiceChatApp(tk.Tk):
             # set unmute
             if self.client is not None:
                 self.client.set_mute_status(False)
-            self.mute_button.config(text="Mute")
+            self.mute_button.config(text="Mute", bg="lightgreen", fg="black")
             self.mute_status = False
         else:
             # set mute
             if self.client is not None:
                 self.client.set_mute_status(True)
-            self.mute_button.config(text="Unmute")
+            self.mute_button.config(text="Unmute", bg="pink", fg="black")
             self.mute_status = True
     
     def on_deafen_button_click(self):
@@ -325,13 +327,13 @@ class VoiceChatApp(tk.Tk):
             # set undeafen
             if self.client is not None:
                 self.client.set_deafen_status(False)
-            self.deafen_button.config(text="Deafen")
+            self.deafen_button.config(text="Deafen", bg="lightgreen", fg="black")
             self.deafen_status = False
         else:
             # set deafen
             if self.client is not None:
                 self.client.set_deafen_status(True)
-            self.deafen_button.config(text="Undeafen")
+            self.deafen_button.config(text="Undeafen", bg="pink", fg="black")
             self.deafen_status = True
 
     def on_record_button_click(self):
@@ -339,13 +341,13 @@ class VoiceChatApp(tk.Tk):
             # set stop recording
             if self.client is not None:
                 self.client.set_record_status(False)
-            self.record_button.config(text="Record")
+            self.record_button.config(text="Record", bg="lightyellow", fg="black")
             self.record_status = False
         else:
             # set start recording
             if self.client is not None:
                 self.client.set_record_status(True)
-            self.record_button.config(text="Stop Recording")
+            self.record_button.config(text="Stop Recording", bg="lightblue", fg="black")
             self.record_status = True
 
     def on_pitch_change(self, event=None):
@@ -376,20 +378,18 @@ class VoiceChatApp(tk.Tk):
         self.username_set_button.config(state=status)
         self.ip_address_entry.config(state=status)
         self.ip_address_set_button.config(state=status)
-        # self.port_entry.config(state=status)
-        # self.port_set_button.config(state=status)
-        self.create_room_button.config(state=status)
-        self.refresh_button.config(state=status)
+        self.create_room_button.config(state=status, bg="lightgreen" if status == tk.NORMAL else "lightgray")
+        self.refresh_button.config(state=status, bg="lightblue" if status == tk.NORMAL else "lightgray")
+        self.join_button.config(state=status, bg="lightgreen" if status == tk.NORMAL else "lightgray")
         self.chat_rooms_listbox.config(state=status)
-        self.join_button.config(state=status)
         self.microphone_option_menu.config(state=status)
         self.speaker_option_menu.config(state=status)
         return
     
     def set_chatting_enabled(self, status):
-        self.mute_button.config(state=status)
-        self.record_button.config(state=status)
-        self.deafen_button.config(state=status)
+        self.mute_button.config(state=status, bg="pink" if status == tk.NORMAL else "lightgray")
+        self.record_button.config(state=status, bg="lightyellow" if status == tk.NORMAL else "lightgray")
+        self.deafen_button.config(state=status, bg="pink" if status == tk.NORMAL else "lightgray")
         self.pitch_resampler_option_menu.config(state=status)
         self.pitch_slider.config(state=status)
         self.text_listbox.config(state=status)
@@ -397,6 +397,13 @@ class VoiceChatApp(tk.Tk):
         self.text_send_button.config(state=status)
         return
     
+    def get_my_local_ip(self):
+        hostname = socket.getfqdn()
+        print(f"Hostname: {hostname}")
+        ip = socket.gethostbyname(hostname)
+        print(f"IP Address: {ip}")
+        return ip
+
     def on_closing(self):
         if self.client is not None:
             self.client.stop()
